@@ -1,9 +1,18 @@
 const fs = require("fs");
+const path = require("path");
 const puppeteer = require("puppeteer");
 const xml2js = require("xml2js");
 
 const DOWNLOAD_BUTTON_SELECTOR = ".scButton_default";
-const DOWNLOAD_PATH = "./frequencyFiles";
+const DOWNLOAD_FOLDER_PATH = path.join(__dirname, "./frequencyFiles");
+const INPUT_PATH = path.join(
+  __dirname,
+  "./frequencyFiles/LEG_SYS_frequencia.xml"
+);
+const OUTPUT_PATH = path.join(
+  __dirname,
+  "./frequencyFiles/LEG_SYS_frequencia.json"
+);
 const EXPECTED_FILENAME = "LEG_SYS_frequencia.xml";
 const LINK = "http://177.136.123.157/leg/salvador/LEG_SYS_frequencia/";
 const USER_AGENT =
@@ -21,34 +30,49 @@ async function frequencyDataJob() {
 
     await wait(5000);
 
-    await page.waitForSelector(DOWNLOAD_BUTTON_SELECTOR, { visible: true });
-    await page.click(DOWNLOAD_BUTTON_SELECTOR);
+    // Esperar pela mensagem "Arquivo gerado com sucesso"
+    await page.waitForFunction(
+      () => {
+        const exportMessages = Array.from(
+          document.querySelectorAll(".scExportLineFont")
+        );
+        return exportMessages.some((message) =>
+          message.textContent.includes("Arquivo gerado com sucesso")
+        );
+      },
+      { timeout: 0 }
+    ); // 'timeout: 0' significa esperar indefinidamente
 
-    await waitForDownloadComplete(DOWNLOAD_PATH, EXPECTED_FILENAME)
+    // await page.waitForSelector(DOWNLOAD_BUTTON_SELECTOR, { visible: true });
+    // await page.click(DOWNLOAD_BUTTON_SELECTOR);
+
+    // Espera pelos elementos que potencialmente são o botão "Baixar" ficarem disponíveis
+    await page.waitForSelector(DOWNLOAD_BUTTON_SELECTOR, { visible: true });
+
+    // Filtra esses elementos pelo texto "Baixar"
+    const downloadButton = await page.evaluateHandle(
+      (DOWNLOAD_BUTTON_SELECTOR) =>
+        Array.from(document.querySelectorAll(DOWNLOAD_BUTTON_SELECTOR)).find(
+          (button) =>
+            button.textContent.includes("Baixar") &&
+            !button.classList.contains("disabled")
+        ),
+      DOWNLOAD_BUTTON_SELECTOR
+    );
+
+    if (downloadButton.asElement()) {
+      await downloadButton.asElement().click();
+    } else {
+      console.log('Botão "Baixar" não encontrado.');
+    }
+
+    await waitForDownloadComplete(DOWNLOAD_FOLDER_PATH, EXPECTED_FILENAME)
       .then((filePath) => console.log(`Download concluído: ${filePath}`))
       .catch((error) => console.error(error));
 
+    await convertXmlToJson(INPUT_PATH, OUTPUT_PATH).catch(console.error);
+
     await wait(10000);
-
-    // // Lê o arquivo XML (substitua 'caminho/do/arquivo.xml' pelo caminho real do seu arquivo XML)
-    // const xml = fs.readFileSync("caminho/do/arquivo.xml", "utf8");
-
-    // // Cria uma nova instância do parser
-    // const parser = new xml2js.Parser();
-
-    // // Converte o XML para JSON
-    // parser.parseString(xml, (err, result) => {
-    //   if (err) {
-    //     throw err;
-    //   }
-
-    //   // `result` é um objeto JavaScript
-    //   console.log(result);
-
-    //   // Para converter o objeto JavaScript para uma string JSON
-    //   const json = JSON.stringify(result, null, 2);
-    //   console.log(json);
-    // });
 
     await browser.close();
   } catch (error) {
@@ -91,7 +115,7 @@ async function initialConfigs() {
   const client = await page.target().createCDPSession();
   await client.send("Page.setDownloadBehavior", {
     behavior: "allow",
-    downloadPath: DOWNLOAD_PATH,
+    downloadPath: DOWNLOAD_FOLDER_PATH,
   });
 
   //   await context.overridePermissions(LINK, ["geolocation"]);
@@ -101,6 +125,20 @@ async function initialConfigs() {
   page.setDefaultTimeout(61000);
 
   return [context, browser, page];
+}
+
+async function convertXmlToJson(inputPath, outputPath) {
+  const xml = fs.readFileSync(inputPath, "utf8");
+
+  const parser = new xml2js.Parser({ explicitArray: false, mergeAttrs: true });
+
+  const result = await parser.parseStringPromise(xml);
+
+  const json = JSON.stringify(result, null, 2);
+
+  fs.writeFileSync(outputPath, json, "utf8");
+
+  console.log(`Arquivo JSON salvo em: ${outputPath}`);
 }
 
 async function getFormattedDate(date) {
