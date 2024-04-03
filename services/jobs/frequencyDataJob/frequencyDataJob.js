@@ -19,58 +19,29 @@ const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 const XML_BUTTON_SELECTOR = "#xml_top";
 
+// TODO: COMO RODAR O JOB NOVAMENTE EM CASO DE ERRO?
+// DE QUEM EH A RESPONSABILIDADE DE SUBIR OS DADOS PARA A API? ESSE JOB OU UM NOVO?
+// COMO APENAS SUBIR OS DADOS NOVOS? EVITAR SOBRESCRITA DESNECESSARIA? MELHORAR A PERFORMANCE
+// MELHORAR LOGS
+
 async function frequencyDataJob() {
   try {
     const [context, browser, page] = await initialConfigs();
 
-    await page.goto(LINK, { waitUntil: "networkidle0" });
+    await goToXMLDownloadPage(page);
 
-    await page.waitForSelector(XML_BUTTON_SELECTOR, { visible: true });
-    await page.click(XML_BUTTON_SELECTOR);
+    await waitForAvailableDownload(page);
 
-    await wait(5000);
-
-    // Esperar pela mensagem "Arquivo gerado com sucesso"
-    await page.waitForFunction(
-      () => {
-        const exportMessages = Array.from(
-          document.querySelectorAll(".scExportLineFont")
-        );
-        return exportMessages.some((message) =>
-          message.textContent.includes("Arquivo gerado com sucesso")
-        );
-      },
-      { timeout: 0 }
-    ); // 'timeout: 0' significa esperar indefinidamente
-
-    // await page.waitForSelector(DOWNLOAD_BUTTON_SELECTOR, { visible: true });
-    // await page.click(DOWNLOAD_BUTTON_SELECTOR);
-
-    // Espera pelos elementos que potencialmente são o botão "Baixar" ficarem disponíveis
-    await page.waitForSelector(DOWNLOAD_BUTTON_SELECTOR, { visible: true });
-
-    // Filtra esses elementos pelo texto "Baixar"
-    const downloadButton = await page.evaluateHandle(
-      (DOWNLOAD_BUTTON_SELECTOR) =>
-        Array.from(document.querySelectorAll(DOWNLOAD_BUTTON_SELECTOR)).find(
-          (button) =>
-            button.textContent.includes("Baixar") &&
-            !button.classList.contains("disabled")
-        ),
-      DOWNLOAD_BUTTON_SELECTOR
-    );
-
-    if (downloadButton.asElement()) {
-      await downloadButton.asElement().click();
-    } else {
-      console.log('Botão "Baixar" não encontrado.');
-    }
+    await makeDownload(page);
 
     await waitForDownloadComplete(DOWNLOAD_FOLDER_PATH, EXPECTED_FILENAME)
-      .then((filePath) => console.log(`Download concluído: ${filePath}`))
-      .catch((error) => console.error(error));
+      .then((filePath) => writeLog(`Download concluído: ${filePath}`))
+      .catch((error) => writeLog(error));
 
-    await convertXmlToJson(INPUT_PATH, OUTPUT_PATH).catch(console.error);
+    await convertXmlToJson(
+      INPUT_PATH,
+      await getFormattedPath(OUTPUT_PATH)
+    ).catch(console.error);
 
     await wait(10000);
 
@@ -101,7 +72,7 @@ async function initialConfigs() {
 
   const options = {
     args: myArgs,
-    headless: false,
+    headless: "new",
     defaultViewport: null,
   };
 
@@ -138,7 +109,7 @@ async function convertXmlToJson(inputPath, outputPath) {
 
   fs.writeFileSync(outputPath, json, "utf8");
 
-  console.log(`Arquivo JSON salvo em: ${outputPath}`);
+  writeLog(`Arquivo JSON salvo em: ${outputPath}`);
 }
 
 async function getFormattedDate(date) {
@@ -157,19 +128,76 @@ async function getFormattedDate(date) {
   return date.toLocaleString("pt-BR", options);
 }
 
+async function getFormattedPath(originalFileName) {
+  const now = new Date();
+
+  const formattedDate = `${now.getFullYear()}${(now.getMonth() + 1)
+    .toString()
+    .padStart(2, "0")}${now.getDate().toString().padStart(2, "0")}`;
+  const formattedTime = `${now.getHours().toString().padStart(2, "0")}${now
+    .getMinutes()
+    .toString()
+    .padStart(2, "0")}${now.getSeconds().toString().padStart(2, "0")}`;
+
+  const fileNameWithoutExtension = originalFileName.replace(".json", "");
+
+  const fileExtension = originalFileName.split(".").pop();
+
+  return `${fileNameWithoutExtension}_${formattedDate}_${formattedTime}.${fileExtension}`;
+}
+
+async function goToXMLDownloadPage(page) {
+  await page.goto(LINK, { waitUntil: "networkidle0" });
+
+  await page.waitForSelector(XML_BUTTON_SELECTOR, { visible: true });
+  await page.click(XML_BUTTON_SELECTOR);
+
+  await wait(5000);
+}
+
 async function getTimeNow() {
   const now = new Date();
   return await getFormattedDate(now);
 }
 
-function renameStringToFileUsage(texto) {
-  return texto.replace(/\s+/g, "-");
+async function makeDownload(page) {
+  await page.waitForSelector(DOWNLOAD_BUTTON_SELECTOR, { visible: true });
+
+  const downloadButton = await page.evaluateHandle(
+    (DOWNLOAD_BUTTON_SELECTOR) =>
+      Array.from(document.querySelectorAll(DOWNLOAD_BUTTON_SELECTOR)).find(
+        (button) =>
+          button.textContent.includes("Baixar") &&
+          !button.classList.contains("disabled")
+      ),
+    DOWNLOAD_BUTTON_SELECTOR
+  );
+
+  if (downloadButton.asElement()) {
+    await downloadButton.asElement().click();
+  } else {
+    console.log('Botão "Baixar" não encontrado.');
+  }
 }
 
 async function wait(time) {
   return new Promise(function (resolve) {
     setTimeout(resolve, time);
   });
+}
+
+async function waitForAvailableDownload(page) {
+  await page.waitForFunction(
+    () => {
+      const exportMessages = Array.from(
+        document.querySelectorAll(".scExportLineFont")
+      );
+      return exportMessages.some((message) =>
+        message.textContent.includes("Arquivo gerado com sucesso")
+      );
+    },
+    { timeout: 0 }
+  );
 }
 
 async function waitForDownloadComplete(
@@ -206,11 +234,8 @@ async function writeLog(receivedString) {
   let string = `${await getTimeNow()} - `;
   if (typeof receivedString === "object" && receivedString !== null) {
     if (receivedString instanceof Error) {
-      // Isso captura e loga a mensagem de erro e a stack trace
       string += `Error: ${receivedString.message}\nStack: ${receivedString.stack}`;
     } else {
-      // Para outros tipos de objetos, você pode querer convertê-los em string
-      // ou manipular de outra forma.
       string += `Object: ${JSON.stringify(receivedString)}`;
     }
   } else {

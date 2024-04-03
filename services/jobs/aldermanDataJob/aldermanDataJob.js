@@ -3,7 +3,6 @@ const puppeteer = require("puppeteer");
 
 // TODO: https://www.cms.ba.gov.br/vereadores - PARAMETRIZAR PARA PEGAR OS DADOS DE TODOS OS VEREADORES
 // CATEGORIZAR VEREADORES COMO: ATUAIS E EX
-// MODULARIZAR CODIGO
 
 const MAIN_LINK = "https://www.cms.ba.gov.br";
 const LINK = "https://www.cms.ba.gov.br/vereadores/cris-correia";
@@ -19,71 +18,14 @@ async function aldermanDataJob() {
 
     await page.goto(LINK, { waitUntil: "networkidle0" });
 
-    const infoObject = await page.evaluate(() => {
-      const infoDiv = document.querySelector(".info");
-      if (!infoDiv) return null;
-
-      const h4 = infoDiv.querySelector("h4")
-        ? infoDiv.querySelector("h4").innerText
-        : "";
-      const partido = infoDiv.querySelector(".partido")
-        ? infoDiv.querySelector(".partido").innerText
-        : "";
-      const extras = Array.from(infoDiv.querySelectorAll(".extra")).map(
-        (p) => p.innerText
-      );
-
-      const infoObj = { nome: h4, partido: partido, extras: {} };
-
-      extras.forEach((extra) => {
-        const [label, value] = extra.split(":").map((s) => s.trim());
-        if (label && value) {
-          infoObj.extras[label.toLowerCase().replace(/ /g, "_")] = value;
-        }
-      });
-
-      return infoObj;
-    });
-
-    const backgroundImageUrl = await page.evaluate(() => {
-      const photoEl = document.querySelector(".photo");
-      if (!photoEl) return "";
-      const bgImage = photoEl.style.backgroundImage;
-      return bgImage.replace(/url\((['"])?(.*?)\1\)/gi, "$2");
-    });
-
-    const description = await page.evaluate(() => {
-      const container = document.querySelector("#fade-content");
-      if (!container) return ""; // Retorna uma string vazia se o container não for encontrado
-
-      const paragraphs = Array.from(container.querySelectorAll("p"));
-      const paragraphsTexts = paragraphs
-        .map((p) => p.textContent.trim())
-        .join(" "); // Concatena o texto com espaço
-
-      return paragraphsTexts;
-    });
-
-    infoObject["linkFoto"] = `${MAIN_LINK}${backgroundImageUrl}`;
-    infoObject["descricao"] = description;
+    const infoObject = await getAldermanInfoObject(page);
+    infoObject["descricao"] = await getAldermanDescription(page);
+    infoObject["linkFoto"] = `${MAIN_LINK}${await getBackgroundImageUrl(page)}`;
 
     console.log(infoObject);
     // console.log(infoObject.extras["e-mail"]);
 
-    await page.goto(infoObject.linkFoto, { waitUntil: "networkidle0" });
-
-    const imageBuffer = await page.evaluate(() =>
-      fetch(document.location.href)
-        .then((res) => res.arrayBuffer())
-        .then((buf) => Array.from(new Uint8Array(buf)))
-    );
-
-    const filePath = `./aldermanPhotos/${renameStringToFileUsage(
-      infoObject.nome
-    )}.jpg`;
-    fs.writeFileSync(filePath, Buffer.from(imageBuffer));
-
-    writeLog(`Imagem baixada com sucesso e salva como ${filePath}`);
+    await saveAldermanPhoto(page, infoObject);
 
     await browser.close();
   } catch (error) {
@@ -112,7 +54,7 @@ async function initialConfigs() {
 
   const options = {
     args: myArgs,
-    headless: false,
+    headless: "new",
     defaultViewport: null,
   };
 
@@ -130,6 +72,57 @@ async function initialConfigs() {
   page.setDefaultTimeout(61000);
 
   return [context, browser, page];
+}
+
+async function getAldermanDescription(page) {
+  return await page.evaluate(() => {
+    const container = document.querySelector("#fade-content");
+    if (!container) return "";
+
+    const paragraphs = Array.from(container.querySelectorAll("p"));
+    const paragraphsTexts = paragraphs
+      .map((p) => p.textContent.trim())
+      .join(" ");
+
+    return paragraphsTexts;
+  });
+}
+
+async function getAldermanInfoObject(page) {
+  return await page.evaluate(() => {
+    const infoDiv = document.querySelector(".info");
+    if (!infoDiv) return null;
+
+    const h4 = infoDiv.querySelector("h4")
+      ? infoDiv.querySelector("h4").innerText
+      : "";
+    const partido = infoDiv.querySelector(".partido")
+      ? infoDiv.querySelector(".partido").innerText
+      : "";
+    const extras = Array.from(infoDiv.querySelectorAll(".extra")).map(
+      (p) => p.innerText
+    );
+
+    const infoObj = { nome: h4, partido: partido, extras: {} };
+
+    extras.forEach((extra) => {
+      const [label, value] = extra.split(":").map((s) => s.trim());
+      if (label && value) {
+        infoObj.extras[label.toLowerCase().replace(/ /g, "_")] = value;
+      }
+    });
+
+    return infoObj;
+  });
+}
+
+async function getBackgroundImageUrl(page) {
+  return await page.evaluate(() => {
+    const photoEl = document.querySelector(".photo");
+    if (!photoEl) return "";
+    const bgImage = photoEl.style.backgroundImage;
+    return bgImage.replace(/url\((['"])?(.*?)\1\)/gi, "$2");
+  });
 }
 
 async function getFormattedDate(date) {
@@ -157,15 +150,31 @@ function renameStringToFileUsage(receivedString) {
   return receivedString.replace(/\s+/g, "-");
 }
 
+async function saveAldermanPhoto(page, infoObject) {
+  try {
+    await page.goto(infoObject.linkFoto, { waitUntil: "networkidle0" });
+
+    const imageBuffer = await page.evaluate(() =>
+      fetch(document.location.href)
+        .then((res) => res.arrayBuffer())
+        .then((buf) => Array.from(new Uint8Array(buf)))
+    );
+
+    const filePath = `./aldermanPhotos/${renameStringToFileUsage(
+      infoObject.nome
+    )}.jpg`;
+    fs.writeFileSync(filePath, Buffer.from(imageBuffer));
+  } catch (error) {
+    await writeLog(error);
+  }
+}
+
 async function writeLog(receivedString) {
   let string = `${await getTimeNow()} - `;
   if (typeof receivedString === "object" && receivedString !== null) {
     if (receivedString instanceof Error) {
-      // Isso captura e loga a mensagem de erro e a stack trace
       string += `Error: ${receivedString.message}\nStack: ${receivedString.stack}`;
     } else {
-      // Para outros tipos de objetos, você pode querer convertê-los em string
-      // ou manipular de outra forma.
       string += `Object: ${JSON.stringify(receivedString)}`;
     }
   } else {
