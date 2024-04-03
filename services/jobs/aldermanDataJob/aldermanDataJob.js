@@ -2,25 +2,35 @@ const fs = require("fs");
 const puppeteer = require("puppeteer");
 
 // TODO: https://www.cms.ba.gov.br/vereadores - PARAMETRIZAR PARA PEGAR OS DADOS DE TODOS OS VEREADORES
-// CATEGORIZAR VEREADORES COMO: ATUAIS E EX
 
 const MAIN_LINK = "https://www.cms.ba.gov.br";
-const LINK = "https://www.cms.ba.gov.br/vereadores/cris-correia";
-// const LINK = "https://www.cms.ba.gov.br/vereadores/carlos-muniz";
+const ALL_ALDERMAN_LINK = "https://www.cms.ba.gov.br/vereadores";
+const SCRIPT_TIME_LABEL = "Script Time";
+const LINK = "https://www.cms.ba.gov.br/vereadores/carlos-muniz";
 // const LINK = "https://www.cms.ba.gov.br/vereadores/cezar-leite";
-// const LINK = "https://www.cms.ba.gov.br/vereadores/alberto-braga";
+
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
 async function aldermanDataJob() {
   try {
+    console.time(SCRIPT_TIME_LABEL);
+
     const [context, browser, page] = await initialConfigs();
+
+    // await page.goto(ALL_ALDERMAN_LINK, { waitUntil: "networkidle0" });
+
+    // const urls = await getAllAldermanUrls(page);
+
+    // console.log(urls.length);
+    // console.log(urls);
 
     await page.goto(LINK, { waitUntil: "networkidle0" });
 
     const infoObject = await getAldermanInfoObject(page);
     infoObject["descricao"] = await getAldermanDescription(page);
     infoObject["linkFoto"] = `${MAIN_LINK}${await getBackgroundImageUrl(page)}`;
+    infoObject["emAtividade"] = await getAldermanActivityInfo(page);
 
     console.log(infoObject);
     // console.log(infoObject.extras["e-mail"]);
@@ -28,6 +38,8 @@ async function aldermanDataJob() {
     await saveAldermanPhoto(page, infoObject);
 
     await browser.close();
+
+    console.timeEnd(SCRIPT_TIME_LABEL);
   } catch (error) {
     await writeLog(error);
     process.exit();
@@ -65,13 +77,38 @@ async function initialConfigs() {
 
   await page.setUserAgent(USER_AGENT);
 
-  await context.overridePermissions(LINK, ["geolocation"]);
+  await context.overridePermissions(ALL_ALDERMAN_LINK, ["geolocation"]);
 
   await page.setViewport({ width: 1280, height: 800 });
 
   page.setDefaultTimeout(61000);
 
   return [context, browser, page];
+}
+
+async function getAllAldermanUrls(page) {
+  return await page.evaluate(() => {
+    const containers = Array.from(
+      document.querySelectorAll(".avatar-container")
+    );
+    return containers
+      .map((container) => {
+        const onclickValue = container.getAttribute("onclick");
+        const urlMatch = onclickValue.match(/'([^']+)'/);
+        return urlMatch ? urlMatch[1] : null;
+      })
+      .filter((url) => url !== null);
+  });
+}
+
+async function getAldermanActivityInfo(page) {
+  return await page
+    .$eval("#content > div > div > div.col-md-8 > h2", (elemento) => {
+      return elemento.textContent.toLowerCase().includes("legislatura");
+    })
+    .catch(() => {
+      return false;
+    });
 }
 
 async function getAldermanDescription(page) {
@@ -81,7 +118,7 @@ async function getAldermanDescription(page) {
 
     const paragraphs = Array.from(container.querySelectorAll("p"));
     const paragraphsTexts = paragraphs
-      .map((p) => p.textContent.trim())
+      .map((p) => p.textContent.trim().replace(/\n/g, " "))
       .join(" ");
 
     return paragraphsTexts;
@@ -164,6 +201,8 @@ async function saveAldermanPhoto(page, infoObject) {
       infoObject.nome
     )}.jpg`;
     fs.writeFileSync(filePath, Buffer.from(imageBuffer));
+
+    await writeLog(`Imagem salva com sucesso: ${filePath}`);
   } catch (error) {
     await writeLog(error);
   }

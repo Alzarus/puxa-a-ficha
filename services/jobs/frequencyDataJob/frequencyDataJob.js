@@ -3,8 +3,6 @@ const path = require("path");
 const puppeteer = require("puppeteer");
 const xml2js = require("xml2js");
 
-const DOWNLOAD_BUTTON_SELECTOR = ".scButton_default";
-const DOWNLOAD_FOLDER_PATH = path.join(__dirname, "./frequencyFiles");
 const INPUT_PATH = path.join(
   __dirname,
   "./frequencyFiles/LEG_SYS_frequencia.xml"
@@ -13,10 +11,13 @@ const OUTPUT_PATH = path.join(
   __dirname,
   "./frequencyFiles/LEG_SYS_frequencia.json"
 );
+const DOWNLOAD_BUTTON_SELECTOR = ".scButton_default";
+const DOWNLOAD_FOLDER_PATH = path.join(__dirname, "./frequencyFiles");
 const EXPECTED_FILENAME = "LEG_SYS_frequencia.xml";
 const LINK = "http://177.136.123.157/leg/salvador/LEG_SYS_frequencia/";
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+const SCRIPT_TIME_LABEL = "Script Time";
 const XML_BUTTON_SELECTOR = "#xml_top";
 
 // TODO: COMO RODAR O JOB NOVAMENTE EM CASO DE ERRO?
@@ -26,6 +27,7 @@ const XML_BUTTON_SELECTOR = "#xml_top";
 
 async function frequencyDataJob() {
   try {
+    console.time(SCRIPT_TIME_LABEL);
     const [context, browser, page] = await initialConfigs();
 
     await goToXMLDownloadPage(page);
@@ -46,6 +48,7 @@ async function frequencyDataJob() {
     await wait(10000);
 
     await browser.close();
+    console.timeEnd(SCRIPT_TIME_LABEL);
   } catch (error) {
     await writeLog(error);
     process.exit();
