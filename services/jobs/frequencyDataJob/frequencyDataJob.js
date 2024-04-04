@@ -45,7 +45,7 @@ async function frequencyDataJob() {
       await getFormattedPath(OUTPUT_PATH)
     ).catch(console.error);
 
-    await wait(10000);
+    await wait(5000);
 
     await browser.close();
     console.timeEnd(SCRIPT_TIME_LABEL);

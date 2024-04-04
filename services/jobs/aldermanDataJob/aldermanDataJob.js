@@ -1,14 +1,9 @@
 const fs = require("fs");
 const puppeteer = require("puppeteer");
 
-// TODO: https://www.cms.ba.gov.br/vereadores - PARAMETRIZAR PARA PEGAR OS DADOS DE TODOS OS VEREADORES
-
 const MAIN_LINK = "https://www.cms.ba.gov.br";
 const ALL_ALDERMAN_LINK = "https://www.cms.ba.gov.br/vereadores";
 const SCRIPT_TIME_LABEL = "Script Time";
-const LINK = "https://www.cms.ba.gov.br/vereadores/carlos-muniz";
-// const LINK = "https://www.cms.ba.gov.br/vereadores/cezar-leite";
-
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
@@ -18,24 +13,21 @@ async function aldermanDataJob() {
 
     const [context, browser, page] = await initialConfigs();
 
-    // await page.goto(ALL_ALDERMAN_LINK, { waitUntil: "networkidle0" });
+    await page.goto(ALL_ALDERMAN_LINK, { waitUntil: "networkidle0" });
 
-    // const urls = await getAllAldermanUrls(page);
+    const urls = await getAllAldermanUrls(page);
 
-    // console.log(urls.length);
-    // console.log(urls);
+    const aldermanInfoList = [];
 
-    await page.goto(LINK, { waitUntil: "networkidle0" });
+    for (const url of urls) {
+      const infoObject = await fetchAldermanData(page, url);
+      aldermanInfoList.push(infoObject);
+    }
 
-    const infoObject = await getAldermanInfoObject(page);
-    infoObject["descricao"] = await getAldermanDescription(page);
-    infoObject["linkFoto"] = `${MAIN_LINK}${await getBackgroundImageUrl(page)}`;
-    infoObject["emAtividade"] = await getAldermanActivityInfo(page);
-
-    console.log(infoObject);
-    // console.log(infoObject.extras["e-mail"]);
-
-    await saveAldermanPhoto(page, infoObject);
+    await saveDataToJson(
+      aldermanInfoList,
+      await getFormattedPath("./aldermanFiles/alderman_info.json")
+    );
 
     await browser.close();
 
@@ -178,9 +170,43 @@ async function getFormattedDate(date) {
   return date.toLocaleString("pt-BR", options);
 }
 
+async function getFormattedPath(originalFilePath) {
+  const now = new Date();
+
+  const formattedDate = `${now.getFullYear()}${(now.getMonth() + 1)
+    .toString()
+    .padStart(2, "0")}${now.getDate().toString().padStart(2, "0")}`;
+  const formattedTime = `${now.getHours().toString().padStart(2, "0")}${now
+    .getMinutes()
+    .toString()
+    .padStart(2, "0")}${now.getSeconds().toString().padStart(2, "0")}`;
+
+  const fileNameWithoutExtension = originalFilePath.replace(".json", "");
+
+  const fileExtension = originalFilePath.split(".").pop();
+
+  return `${fileNameWithoutExtension}_${formattedDate}_${formattedTime}.${fileExtension}`;
+}
+
 async function getTimeNow() {
   const now = new Date();
   return await getFormattedDate(now);
+}
+
+async function fetchAldermanData(page, url) {
+  await page.goto(`${MAIN_LINK}${url}`, { waitUntil: "networkidle0" });
+
+  const infoObject = await getAldermanInfoObject(page);
+  infoObject["descricao"] = await getAldermanDescription(page);
+  infoObject["linkFoto"] = `${MAIN_LINK}${await getBackgroundImageUrl(page)}`;
+  infoObject["emAtividade"] = await getAldermanActivityInfo(page);
+
+  // console.log(infoObject);
+  // console.log(infoObject.extras["e-mail"]);
+
+  await saveAldermanPhoto(page, infoObject);
+
+  return infoObject;
 }
 
 function renameStringToFileUsage(receivedString) {
@@ -206,6 +232,10 @@ async function saveAldermanPhoto(page, infoObject) {
   } catch (error) {
     await writeLog(error);
   }
+}
+
+async function saveDataToJson(data, filename) {
+  fs.writeFileSync(filename, JSON.stringify(data, null, 2));
 }
 
 async function writeLog(receivedString) {
