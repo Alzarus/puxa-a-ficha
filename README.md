@@ -5,3 +5,5 @@ Créditos à Câmara Municipal de Salvador pela dispobilização dos dados - htt
 
 npm install puppeteer@^21.0.3
 npm install xml2js
+npm i playwright  
+npx playwright install

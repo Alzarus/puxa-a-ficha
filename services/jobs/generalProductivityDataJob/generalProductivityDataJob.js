@@ -2,14 +2,12 @@ const fs = require("fs");
 const path = require("path");
 const puppeteer = require("puppeteer");
 
-const DOWNLOAD_BUTTON_SELECTOR = ".scButton_default";
-const DOWNLOAD_FOLDER_PATH = path.join(__dirname, "./propositionFiles");
-const EXPECTED_FILENAME = "prop_interna.json";
-const EXPORT_BUTTON_SELECTOR = "#sc_btgp_btn_group_1_top";
-const LINK = "https://cmsalvador.sys.inf.br/cl/prop_interna/";
+const DROPDOWN_PERIOD_BUTTON_SELECTOR =
+  ".SumoSelect.sumo_TRA_TRA_DT_MOVIMENTACAO_SC_1";
+const LINK =
+  "http://177.136.123.157/leg/salvador/LEG_SYS_produtividade_parlamentar/";
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
-const INPUT_PATH = path.join(__dirname, "./propositionFiles/prop_interna.json");
 const SCRIPT_TIME_LABEL = "Script Time";
 
 // TODO: COMO RODAR O JOB NOVAMENTE EM CASO DE ERRO?
@@ -17,26 +15,13 @@ const SCRIPT_TIME_LABEL = "Script Time";
 // COMO APENAS SUBIR OS DADOS NOVOS? EVITAR SOBRESCRITA DESNECESSARIA? MELHORAR A PERFORMANCE
 // MELHORAR LOGS
 
-async function propositionDataJob() {
+async function generalProductivityDataJob() {
   try {
     console.time(SCRIPT_TIME_LABEL);
+    // const [browser, page] = await initialConfigs();
     const [context, browser, page] = await initialConfigs();
 
-    await goToJsonDownloadPage(page);
-
-    await waitForAvailableDownload(page);
-
-    await makeDownload(page);
-
-    await waitForDownloadComplete(DOWNLOAD_FOLDER_PATH, EXPECTED_FILENAME)
-      .then((filePath) => writeLog(`Download concluído: ${filePath}`))
-      .catch((error) => writeLog(error));
-
-    const newFilePath = await getFormattedPath(INPUT_PATH);
-
-    await renameDownloadedFile(INPUT_PATH, newFilePath);
-
-    await writeLog(`Arquivo JSON renomeado para: ${newFilePath}`);
+    await goToMainPage(page);
 
     await wait(5000);
 
@@ -68,7 +53,7 @@ async function initialConfigs() {
 
   const options = {
     args: myArgs,
-    headless: "new",
+    headless: false,
     defaultViewport: null,
   };
 
@@ -78,12 +63,6 @@ async function initialConfigs() {
   const page = await context.newPage();
 
   await page.setUserAgent(USER_AGENT);
-
-  const client = await page.target().createCDPSession();
-  await client.send("Page.setDownloadBehavior", {
-    behavior: "allow",
-    downloadPath: DOWNLOAD_FOLDER_PATH,
-  });
 
   //   await context.overridePermissions(LINK, ["geolocation"]);
 
@@ -110,44 +89,13 @@ async function getFormattedDate(date) {
   return date.toLocaleString("pt-BR", options);
 }
 
-async function getFormattedPath(originalFilePath) {
-  const now = new Date();
-
-  const formattedDate = `${now.getFullYear()}${(now.getMonth() + 1)
-    .toString()
-    .padStart(2, "0")}${now.getDate().toString().padStart(2, "0")}`;
-  const formattedTime = `${now.getHours().toString().padStart(2, "0")}${now
-    .getMinutes()
-    .toString()
-    .padStart(2, "0")}${now.getSeconds().toString().padStart(2, "0")}`;
-
-  const fileNameWithoutExtension = originalFilePath.replace(".json", "");
-
-  const fileExtension = originalFilePath.split(".").pop();
-
-  return `${fileNameWithoutExtension}_${formattedDate}_${formattedTime}.${fileExtension}`;
-}
-
-async function goToJsonDownloadPage(page) {
+async function goToMainPage(page) {
   await page.goto(LINK, { waitUntil: "networkidle0" });
 
-  await page.waitForSelector(EXPORT_BUTTON_SELECTOR, { visible: true });
-  await page.click(EXPORT_BUTTON_SELECTOR);
-
-  await page.waitForXPath(
-    "//span[@class='btn-label' and contains(text(), 'JSON')]",
-    { visible: true }
-  );
-
-  const [jsonButton] = await page.$x(
-    "//span[@class='btn-label' and contains(text(), 'JSON')]"
-  );
-
-  if (jsonButton) {
-    await jsonButton.click();
-  } else {
-    await writeLog('Botão "JSON" não encontrado');
-  }
+  // await page.waitForSelector(DROPDOWN_PERIOD_BUTTON_SELECTOR, {
+  //   visible: true,
+  // });
+  // await page.click(DROPDOWN_PERIOD_BUTTON_SELECTOR);
 
   await wait(5000);
 }
@@ -157,88 +105,10 @@ async function getTimeNow() {
   return await getFormattedDate(now);
 }
 
-async function makeDownload(page) {
-  await page.waitForSelector(DOWNLOAD_BUTTON_SELECTOR, { visible: true });
-
-  const downloadButton = await page.evaluateHandle(
-    (DOWNLOAD_BUTTON_SELECTOR) =>
-      Array.from(document.querySelectorAll(DOWNLOAD_BUTTON_SELECTOR)).find(
-        (button) =>
-          button.textContent.includes("Baixar") &&
-          !button.classList.contains("disabled")
-      ),
-    DOWNLOAD_BUTTON_SELECTOR
-  );
-
-  if (downloadButton.asElement()) {
-    await downloadButton.asElement().click();
-  } else {
-    await writeLog('Botão "Baixar" não encontrado.');
-  }
-}
-
-async function renameDownloadedFile(oldPath, newPath) {
-  return new Promise((resolve, reject) => {
-    fs.rename(oldPath, newPath, (err) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-      resolve();
-    });
-  }).catch((error) => {
-    throw new Error(`Erro ao renomear o arquivo: ${error}`);
-  });
-}
-
 async function wait(time) {
   return new Promise(function (resolve) {
     setTimeout(resolve, time);
   });
-}
-
-async function waitForAvailableDownload(page) {
-  await page.waitForFunction(
-    () => {
-      const exportMessages = Array.from(
-        document.querySelectorAll(".scExportLineFont")
-      );
-      return exportMessages.some((message) =>
-        message.textContent.includes("Arquivo gerado com sucesso")
-      );
-    },
-    { timeout: 0 }
-  );
-}
-
-async function waitForDownloadComplete(
-  downloadPath,
-  expectedFilename,
-  timeout = 30000
-) {
-  let filename;
-  const startTime = new Date().getTime();
-
-  while (true) {
-    const files = fs.readdirSync(downloadPath);
-
-    filename = files.find((file) => file.includes(expectedFilename));
-
-    if (filename) {
-      const filePath = path.join(downloadPath, filename);
-      const fileSize1 = fs.statSync(filePath).size;
-      await wait(1000);
-      const fileSize2 = fs.statSync(filePath).size;
-
-      if (fileSize1 === fileSize2) break;
-    }
-
-    if (new Date().getTime() - startTime > timeout) {
-      throw new Error("Download timeout");
-    }
-  }
-
-  return path.join(downloadPath, filename);
 }
 
 async function writeLog(receivedString) {
@@ -257,4 +127,4 @@ async function writeLog(receivedString) {
   console.log(string);
 }
 
-propositionDataJob();
+generalProductivityDataJob();
