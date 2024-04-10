@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const puppeteer = require("puppeteer");
+const playwright = require("playwright");
 
 const DROPDOWN_PERIOD_BUTTON_SELECTOR =
   ".SumoSelect.sumo_TRA_TRA_DT_MOVIMENTACAO_SC_1";
@@ -34,45 +34,14 @@ async function propositionProductivityDataJob() {
 }
 
 async function initialConfigs() {
-  const myArgs = [
-    "--disable-extensions",
-    "--disable-features=IsolateOrigins,site-per-process",
-    "--disable-gpu",
-    "--disable-infobars",
-    "--disable-setuid-sandbox",
-    "--disable-web-security",
-    "--enable-webgl",
-    "--enable-accelerated-2d-canvas",
-    "--force-device-scale-factor",
-    "--ignore-certificate-errors",
-    "--no-sandbox",
-    "--disable-features=site-per-process",
-    "--disable-features=IsolateOrigins,site-per-process,SitePerProcess",
-    "--flag-switches-begin --disable-site-isolation-trials --flag-switches-end",
-  ];
-
   const options = {
-    args: myArgs,
     headless: false,
-    defaultViewport: null,
   };
 
-  const browser = await puppeteer.launch(options);
+  const browser = await playwright.chromium.launch(options);
   const page = await browser.newPage();
 
-  // const context = await browser.createIncognitoBrowserContext();
-  // const page = await context.newPage();
-
-  // await page.setUserAgent(USER_AGENT);
-
-  //   await context.overridePermissions(LINK, ["geolocation"]);
-
-  // await page.setViewport({ width: 1280, height: 800 });
-
-  // page.setDefaultTimeout(61000);
-
   return [browser, page];
-  // return [context, browser, page];
 }
 
 async function getFormattedDate(date) {
@@ -94,10 +63,10 @@ async function getFormattedDate(date) {
 async function goToMainPage(page) {
   await page.goto(LINK, { waitUntil: "networkidle0" });
 
-  // await page.waitForSelector(DROPDOWN_PERIOD_BUTTON_SELECTOR, {
-  //   visible: true,
-  // });
-  // await page.click(DROPDOWN_PERIOD_BUTTON_SELECTOR);
+  await page.waitForSelector(DROPDOWN_PERIOD_BUTTON_SELECTOR, {
+    visible: true,
+  });
+  await page.click(DROPDOWN_PERIOD_BUTTON_SELECTOR);
 
   await wait(5000);
 }
