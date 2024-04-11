@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const playwright = require("playwright");
 
+const DROPDOWN_OPTIONS_SELECTOR = ".opt";
 const DROPDOWN_PERIOD_BUTTON_SELECTOR =
   ".SumoSelect.sumo_TRA_TRA_DT_MOVIMENTACAO_SC_1";
 const LINK =
@@ -66,7 +67,17 @@ async function goToMainPage(page) {
   await page.waitForSelector(DROPDOWN_PERIOD_BUTTON_SELECTOR, {
     visible: true,
   });
-  await page.click(DROPDOWN_PERIOD_BUTTON_SELECTOR);
+
+  const dropdownOptions = await page.$$(DROPDOWN_OPTIONS_SELECTOR);
+
+  if (dropdownOptions.length > 0) {
+    await page.click(DROPDOWN_PERIOD_BUTTON_SELECTOR);
+
+    await wait(1000);
+
+    await page.evaluate((option) => option.click(), dropdownOptions[1]);
+    // await wait(10000);
+  }
 
   await wait(5000);
 }
