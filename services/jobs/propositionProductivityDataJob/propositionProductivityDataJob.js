@@ -7,8 +7,8 @@ const DROPDOWN_PERIOD_BUTTON_SELECTOR =
   ".SumoSelect.sumo_TRA_TRA_DT_MOVIMENTACAO_SC_1";
 const LINK =
   "http://177.136.123.157/leg/salvador/LEG_SYS_produtividade_parlamentar_proposicao/";
-// const USER_AGENT =
-//   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+const T_BODY_SELECTOR = "#sc-ui-summary-body > tbody:nth-child(2)";
+const T_ROWS_SELECTOR = "#sc-ui-summary-body > tbody:nth-child(2) > tr";
 const SCRIPT_TIME_LABEL = "Script Time";
 
 // TODO: COMO RODAR O JOB NOVAMENTE EM CASO DE ERRO?
@@ -20,9 +20,10 @@ async function propositionProductivityDataJob() {
   try {
     console.time(SCRIPT_TIME_LABEL);
     const [browser, page] = await initialConfigs();
-    // const [context, browser, page] = await initialConfigs();
 
     await goToMainPage(page);
+
+    await getTableData(page);
 
     await wait(5000);
 
@@ -61,25 +62,62 @@ async function getFormattedDate(date) {
   return date.toLocaleString("pt-BR", options);
 }
 
+async function getTableData(page) {
+  try {
+    await page.waitForSelector(T_BODY_SELECTOR);
+
+    const rows = await page.$$(T_ROWS_SELECTOR);
+
+    let tableData = "";
+
+    for (const row of rows) {
+      const cells = await row.$$("td");
+
+      let rowData = [];
+
+      for (const cell of cells) {
+        const text = await cell.textContent();
+        rowData.push(text.trim());
+      }
+
+      tableData += rowData.join(",") + "\n";
+    }
+
+    await fs.promises.writeFile("./tableData.txt", tableData);
+
+    console.log("Dados salvos com sucesso!");
+  } catch (error) {
+    await writeLog(error);
+  }
+}
+
 async function goToMainPage(page) {
-  await page.goto(LINK, { waitUntil: "networkidle0" });
+  try {
+    await page.goto(LINK, { waitUntil: "networkidle0" });
 
-  await page.waitForSelector(DROPDOWN_PERIOD_BUTTON_SELECTOR, {
-    visible: true,
-  });
+    await page.waitForSelector(DROPDOWN_PERIOD_BUTTON_SELECTOR, {
+      visible: true,
+    });
 
-  const dropdownOptions = await page.$$(DROPDOWN_OPTIONS_SELECTOR);
+    const dropdownOptions = await page.$$(DROPDOWN_OPTIONS_SELECTOR);
 
-  if (dropdownOptions.length > 0) {
-    await page.click(DROPDOWN_PERIOD_BUTTON_SELECTOR);
+    if (dropdownOptions.length > 0) {
+      await page.click(DROPDOWN_PERIOD_BUTTON_SELECTOR);
+
+      await wait(1000);
+
+      await dropdownOptions[1].click();
+    }
 
     await wait(1000);
 
-    await page.evaluate((option) => option.click(), dropdownOptions[1]);
-    // await wait(10000);
+    await page.waitForFunction(
+      () => !document.querySelectorAll(".scFormProcess").length,
+      { timeout: 60000 }
+    );
+  } catch (error) {
+    await writeLog(error);
   }
-
-  await wait(5000);
 }
 
 async function getTimeNow() {
