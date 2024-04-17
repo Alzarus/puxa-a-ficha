@@ -5,8 +5,13 @@ const playwright = require("playwright");
 const DROPDOWN_OPTIONS_SELECTOR = ".opt";
 const DROPDOWN_PERIOD_BUTTON_SELECTOR =
   ".SumoSelect.sumo_TRA_TRA_DT_MOVIMENTACAO_SC_1";
+const INPUT_PATH = path.join(
+  __dirname,
+  "./propositionProductivityFiles/tableData.json"
+);
 const LINK =
   "http://177.136.123.157/leg/salvador/LEG_SYS_produtividade_parlamentar_proposicao/";
+
 const T_BODY_SELECTOR = "#sc-ui-summary-body > tbody:nth-child(2)";
 const T_ROWS_SELECTOR = "#sc-ui-summary-body > tbody:nth-child(2) > tr";
 const SCRIPT_TIME_LABEL = "Script Time";
@@ -62,30 +67,114 @@ async function getFormattedDate(date) {
   return date.toLocaleString("pt-BR", options);
 }
 
+async function getFormattedPath(originalFilePath) {
+  const now = new Date();
+
+  const formattedDate = `${now.getFullYear()}${(now.getMonth() + 1)
+    .toString()
+    .padStart(2, "0")}${now.getDate().toString().padStart(2, "0")}`;
+  const formattedTime = `${now.getHours().toString().padStart(2, "0")}${now
+    .getMinutes()
+    .toString()
+    .padStart(2, "0")}${now.getSeconds().toString().padStart(2, "0")}`;
+
+  const fileNameWithoutExtension = originalFilePath.replace(".json", "");
+
+  const fileExtension = originalFilePath.split(".").pop();
+
+  return `${fileNameWithoutExtension}_${formattedDate}_${formattedTime}.${fileExtension}`;
+}
+
 async function getTableData(page) {
   try {
     await page.waitForSelector(T_BODY_SELECTOR);
 
     const rows = await page.$$(T_ROWS_SELECTOR);
 
-    let tableData = "";
-
-    for (const row of rows) {
-      const cells = await row.$$("td");
-
-      let rowData = [];
-
-      for (const cell of cells) {
-        const text = await cell.textContent();
-        rowData.push(text.trim());
-      }
-
-      tableData += rowData.join(",") + "\n";
+    if (rows.length < 2) {
+      throw new Error("Não há dados suficientes na tabela.");
     }
 
-    await fs.promises.writeFile("./tableData.txt", tableData);
+    // Lê os títulos das colunas da primeira linha
+    const headerCells = await rows[0].$$("td");
+    let headers = [];
+    for (const cell of headerCells) {
+      const text = await cell.textContent();
+      headers.push(text.trim());
+    }
 
-    console.log("Dados salvos com sucesso!");
+    // [
+    //   'Ano', 'Parlamentar/Autor',
+    //   'MOC', 'PDL',
+    //   'PEL', 'PIN',
+    //   'PLC', 'PLE',
+    //   'PRE', 'RAD',
+    //   'REP', 'RUP',
+    //   'VTO', 'Total'
+    // ]
+
+    let tableData = [];
+
+    // Processa cada linha a partir da terceira
+    for (let i = 2; i < rows.length; i++) {
+      const cells = await rows[i].$$("td");
+      let auxList = [];
+      let rowData = {};
+      let isTotalLine = !isNaN(parseInt(await cells[1].textContent(), 10));
+
+      for (let j = 0; j < cells.length; j++) {
+        const text = (await cells[j]?.textContent()) || "";
+        auxList.push(text.trim());
+
+        if (isTotalLine) {
+          switch (j) {
+            case 0:
+              rowData[headers[j]] = text.trim();
+              break;
+            case 1:
+              rowData[headers[j]] = "";
+              break;
+            case cells.length - 1:
+              rowData[headers[j + 1]] = auxList[j];
+            default:
+              rowData[headers[j]] = auxList[j - 1];
+              break;
+          }
+        } else {
+          rowData[headers[j]] = text.trim();
+        }
+
+        console.log(text.trim());
+      }
+
+      // Adiciona uma coluna Tipo para identificar a linha
+      if (i === rows.length - 1) {
+        // Última linha como 'Total Geral'
+        rowData["Tipo"] = "Total Geral";
+      } else if (isTotalLine) {
+        // Linhas de total sem nome de autor
+        rowData["Tipo"] = "Total";
+      } else {
+        // Linhas normais com nome de autor
+        rowData["Tipo"] = "Autor";
+      }
+
+      tableData.push(rowData);
+    }
+
+    const jsonContent = JSON.stringify(tableData, null, 2);
+    await fs.promises.writeFile(
+      "./propositionProductivityFiles/tableData.json",
+      jsonContent
+    );
+
+    await writeLog("Dados salvos com sucesso!");
+
+    const newFilePath = await getFormattedPath(INPUT_PATH);
+
+    await renameFile(INPUT_PATH, newFilePath);
+
+    await writeLog(`Arquivo renomeado para: ${newFilePath}`);
   } catch (error) {
     await writeLog(error);
   }
@@ -112,8 +201,8 @@ async function goToMainPage(page) {
     await wait(1000);
 
     await page.waitForFunction(
-      () => !document.querySelectorAll(".scFormProcess").length,
-      { timeout: 60000 }
+      () => !document.querySelector(".blockUI.blockOverlay"),
+      { timeout: 30000 }
     );
   } catch (error) {
     await writeLog(error);
@@ -123,6 +212,20 @@ async function goToMainPage(page) {
 async function getTimeNow() {
   const now = new Date();
   return await getFormattedDate(now);
+}
+
+async function renameFile(oldPath, newPath) {
+  return new Promise((resolve, reject) => {
+    fs.rename(oldPath, newPath, (err) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve();
+    });
+  }).catch((error) => {
+    throw new Error(`Erro ao renomear o arquivo: ${error}`);
+  });
 }
 
 async function wait(time) {
