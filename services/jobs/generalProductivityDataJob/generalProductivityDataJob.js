@@ -42,7 +42,7 @@ async function generalProductivityDataJob() {
 
 async function initialConfigs() {
   const options = {
-    headless: false,
+    headless: true,
   };
 
   const browser = await playwright.chromium.launch(options);
