@@ -144,7 +144,7 @@ async function getTableData(page) {
           rowData[headers[j]] = text.trim();
         }
 
-        console.log(text.trim());
+        // console.log(text.trim());
       }
 
       // Adiciona uma coluna Tipo para identificar a linha
