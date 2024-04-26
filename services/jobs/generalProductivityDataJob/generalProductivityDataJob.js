@@ -15,6 +15,7 @@ const LINK =
 const T_BODY_SELECTOR = "#sc-ui-summary-body > tbody:nth-child(2)";
 const T_ROWS_SELECTOR = "#sc-ui-summary-body > tbody:nth-child(2) > tr";
 const SCRIPT_TIME_LABEL = "Script Time";
+const PATH_FILES_FOLDER = "./generalProductivityFiles";
 
 // TODO: COMO RODAR O JOB NOVAMENTE EM CASO DE ERRO?
 // DE QUEM EH A RESPONSABILIDADE DE SUBIR OS DADOS PARA A API? ESSE JOB OU UM NOVO?
@@ -24,6 +25,9 @@ const SCRIPT_TIME_LABEL = "Script Time";
 async function generalProductivityDataJob() {
   try {
     console.time(SCRIPT_TIME_LABEL);
+
+    await checkAndCreateFolder(PATH_FILES_FOLDER);
+
     const [browser, page] = await initialConfigs();
 
     await goToMainPage(page);
@@ -49,6 +53,17 @@ async function initialConfigs() {
   const page = await browser.newPage();
 
   return [browser, page];
+}
+
+async function checkAndCreateFolder(folderPath) {
+  const resolvedPath = path.resolve(folderPath);
+
+  if (!fs.existsSync(resolvedPath)) {
+    fs.mkdirSync(resolvedPath, { recursive: true });
+    await writeLog(`Pasta '${resolvedPath}' criada com sucesso.`);
+  } else {
+    await writeLog(`Pasta '${resolvedPath}' já existe.`);
+  }
 }
 
 async function getFormattedDate(date) {

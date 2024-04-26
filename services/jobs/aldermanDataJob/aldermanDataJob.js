@@ -1,4 +1,5 @@
 const fs = require("fs");
+const path = require("path");
 const puppeteer = require("puppeteer");
 
 const MAIN_LINK = "https://www.cms.ba.gov.br";
@@ -6,10 +7,15 @@ const ALL_ALDERMAN_LINK = "https://www.cms.ba.gov.br/vereadores";
 const SCRIPT_TIME_LABEL = "Script Time";
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+const PATH_FILES_FOLDER = "./aldermanFiles";
+const PATH_PHOTOS_FOLDER = "./aldermanPhotos";
 
 async function aldermanDataJob() {
   try {
     console.time(SCRIPT_TIME_LABEL);
+
+    await checkAndCreateFolder(PATH_FILES_FOLDER);
+    await checkAndCreateFolder(PATH_PHOTOS_FOLDER);
 
     const [context, browser, page] = await initialConfigs();
 
@@ -76,6 +82,17 @@ async function initialConfigs() {
   page.setDefaultTimeout(61000);
 
   return [context, browser, page];
+}
+
+async function checkAndCreateFolder(folderPath) {
+  const resolvedPath = path.resolve(folderPath);
+
+  if (!fs.existsSync(resolvedPath)) {
+    fs.mkdirSync(resolvedPath, { recursive: true });
+    await writeLog(`Pasta '${resolvedPath}' criada com sucesso.`);
+  } else {
+    await writeLog(`Pasta '${resolvedPath}' já existe.`);
+  }
 }
 
 async function getAllAldermanUrls(page) {
