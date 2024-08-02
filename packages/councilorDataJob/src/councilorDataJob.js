@@ -3,14 +3,14 @@ const path = require("path");
 const puppeteer = require("puppeteer");
 
 const MAIN_LINK = "https://www.cms.ba.gov.br";
-const ALL_ALDERMAN_LINK = "https://www.cms.ba.gov.br/vereadores";
+const ALL_COUNCILOR_LINK = "https://www.cms.ba.gov.br/vereadores";
 const SCRIPT_TIME_LABEL = "Script Time";
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
-const PATH_FILES_FOLDER = "./aldermanFiles";
-const PATH_PHOTOS_FOLDER = "./aldermanPhotos";
+const PATH_FILES_FOLDER = "./councilorFiles";
+const PATH_PHOTOS_FOLDER = "./councilorPhotos";
 
-async function aldermanDataJob() {
+async function councilorDataJob() {
   try {
     console.time(SCRIPT_TIME_LABEL);
 
@@ -19,20 +19,20 @@ async function aldermanDataJob() {
 
     const [context, browser, page] = await initialConfigs();
 
-    await page.goto(ALL_ALDERMAN_LINK, { waitUntil: "networkidle0" });
+    await page.goto(ALL_COUNCILOR_LINK, { waitUntil: "networkidle0" });
 
-    const urls = await getAllAldermanUrls(page);
+    const urls = await getAllCouncilorUrls(page);
 
-    const aldermanInfoList = [];
+    const councilorInfoList = [];
 
     for (const url of urls) {
-      const infoObject = await fetchAldermanData(page, url);
-      aldermanInfoList.push(infoObject);
+      const infoObject = await fetchCouncilorData(page, url);
+      councilorInfoList.push(infoObject);
     }
 
     await saveDataToJson(
-      aldermanInfoList,
-      await getFormattedPath("./aldermanFiles/alderman_info.json")
+      councilorInfoList,
+      await getFormattedPath("./councilorFiles/councilor_info.json")
     );
 
     await browser.close();
@@ -75,7 +75,7 @@ async function initialConfigs() {
 
   await page.setUserAgent(USER_AGENT);
 
-  await context.overridePermissions(ALL_ALDERMAN_LINK, ["geolocation"]);
+  await context.overridePermissions(ALL_COUNCILOR_LINK, ["geolocation"]);
 
   await page.setViewport({ width: 1280, height: 800 });
 
@@ -95,7 +95,7 @@ async function checkAndCreateFolder(folderPath) {
   }
 }
 
-async function getAllAldermanUrls(page) {
+async function getAllCouncilorUrls(page) {
   return await page.evaluate(() => {
     const containers = Array.from(
       document.querySelectorAll(".avatar-container")
@@ -110,7 +110,7 @@ async function getAllAldermanUrls(page) {
   });
 }
 
-async function getAldermanActivityInfo(page) {
+async function getCouncilorActivityInfo(page) {
   return await page
     .$eval("#content > div > div > div.col-md-8 > h2", (elemento) => {
       return elemento.textContent.toLowerCase().includes("legislatura");
@@ -120,7 +120,7 @@ async function getAldermanActivityInfo(page) {
     });
 }
 
-async function getAldermanDescription(page) {
+async function getCouncilorDescription(page) {
   return await page.evaluate(() => {
     const container = document.querySelector("#fade-content");
     if (!container) return "";
@@ -134,7 +134,7 @@ async function getAldermanDescription(page) {
   });
 }
 
-async function getAldermanInfoObject(page) {
+async function getCouncilorInfoObject(page) {
   return await page.evaluate(() => {
     const infoDiv = document.querySelector(".info");
     if (!infoDiv) return null;
@@ -210,18 +210,18 @@ async function getTimeNow() {
   return await getFormattedDate(now);
 }
 
-async function fetchAldermanData(page, url) {
+async function fetchCouncilorData(page, url) {
   await page.goto(`${MAIN_LINK}${url}`, { waitUntil: "networkidle0" });
 
-  const infoObject = await getAldermanInfoObject(page);
-  infoObject["descricao"] = await getAldermanDescription(page);
+  const infoObject = await getCouncilorInfoObject(page);
+  infoObject["descricao"] = await getCouncilorDescription(page);
   infoObject["linkFoto"] = `${MAIN_LINK}${await getBackgroundImageUrl(page)}`;
-  infoObject["emAtividade"] = await getAldermanActivityInfo(page);
+  infoObject["emAtividade"] = await getCouncilorActivityInfo(page);
 
   // console.log(infoObject);
   // console.log(infoObject.extras["e-mail"]);
 
-  await saveAldermanPhoto(page, infoObject);
+  await saveCouncilorPhoto(page, infoObject);
 
   return infoObject;
 }
@@ -230,7 +230,7 @@ function renameStringToFileUsage(receivedString) {
   return receivedString.replace(/\s+/g, "-");
 }
 
-async function saveAldermanPhoto(page, infoObject) {
+async function saveCouncilorPhoto(page, infoObject) {
   try {
     await page.goto(infoObject.linkFoto, { waitUntil: "networkidle0" });
 
@@ -240,7 +240,7 @@ async function saveAldermanPhoto(page, infoObject) {
         .then((buf) => Array.from(new Uint8Array(buf)))
     );
 
-    const filePath = `./aldermanPhotos/${renameStringToFileUsage(
+    const filePath = `./councilorPhotos/${renameStringToFileUsage(
       infoObject.nome
     )}.jpg`;
     fs.writeFileSync(filePath, Buffer.from(imageBuffer));
@@ -271,4 +271,4 @@ async function writeLog(receivedString) {
   console.log(string);
 }
 
-aldermanDataJob();
+councilorDataJob();
