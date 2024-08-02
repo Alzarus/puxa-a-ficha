@@ -1,0 +1,11 @@
+{
+  "name": "general-productivity-data-job",
+  "version": "1.0.0",
+  "description": "Crawler para coletar dados de produtividade geral",
+  "main": "src/generalProductivityDataJob.js",
+  "scripts": {
+    "start": "node src/generalProductivityDataJob.js"
+  },
+  "author": "",
+  "license": "ISC"
+}
