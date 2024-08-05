@@ -7,7 +7,7 @@ const DROPDOWN_PERIOD_BUTTON_SELECTOR =
   ".SumoSelect.sumo_TRA_TRA_DT_MOVIMENTACAO_SC_1";
 const INPUT_PATH = path.join(
   __dirname,
-  "./propositionProductivityFiles/tableData.json"
+  "../propositionProductivityFiles/tableData.json"
 );
 const LINK =
   "http://177.136.123.157/leg/salvador/LEG_SYS_produtividade_parlamentar_proposicao/";
