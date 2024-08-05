@@ -1,24 +1,32 @@
 const fs = require("fs");
 const path = require("path");
 const puppeteer = require("puppeteer");
+const xml2js = require("xml2js");
 
+const INPUT_PATH = path.join(
+  __dirname,
+  "../frequencyFiles/LEG_SYS_frequencia.xml"
+);
+const OUTPUT_PATH = path.join(
+  __dirname,
+  "../frequencyFiles/LEG_SYS_frequencia.json"
+);
 const DOWNLOAD_BUTTON_SELECTOR = ".scButton_default";
-const DOWNLOAD_FOLDER_PATH = path.join(__dirname, "./propositionFiles");
-const EXPECTED_FILENAME = "prop_interna.json";
-const EXPORT_BUTTON_SELECTOR = "#sc_btgp_btn_group_1_top";
-const LINK = "https://cmsalvador.sys.inf.br/cl/prop_interna/";
+const DOWNLOAD_FOLDER_PATH = path.join(__dirname, "../frequencyFiles");
+const EXPECTED_FILENAME = "LEG_SYS_frequencia.xml";
+const LINK = "http://177.136.123.157/leg/salvador/LEG_SYS_frequencia/";
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
-const INPUT_PATH = path.join(__dirname, "./propositionFiles/prop_interna.json");
 const SCRIPT_TIME_LABEL = "Script Time";
-const PATH_FILES_FOLDER = "./propositionFiles";
+const XML_BUTTON_SELECTOR = "#xml_top";
+const PATH_FILES_FOLDER = "./frequencyFiles";
 
 // TODO: COMO RODAR O JOB NOVAMENTE EM CASO DE ERRO?
 // DE QUEM EH A RESPONSABILIDADE DE SUBIR OS DADOS PARA A API? ESSE JOB OU UM NOVO?
 // COMO APENAS SUBIR OS DADOS NOVOS? EVITAR SOBRESCRITA DESNECESSARIA? MELHORAR A PERFORMANCE
 // MELHORAR LOGS
 
-async function propositionDataJob() {
+async function frequencyDataJob() {
   try {
     console.time(SCRIPT_TIME_LABEL);
 
@@ -26,7 +34,7 @@ async function propositionDataJob() {
 
     const [context, browser, page] = await initialConfigs();
 
-    await goToJsonDownloadPage(page);
+    await goToXMLDownloadPage(page);
 
     await waitForAvailableDownload(page);
 
@@ -36,11 +44,10 @@ async function propositionDataJob() {
       .then((filePath) => writeLog(`Download concluído: ${filePath}`))
       .catch((error) => writeLog(error));
 
-    const newFilePath = await getFormattedPath(INPUT_PATH);
-
-    await renameDownloadedFile(INPUT_PATH, newFilePath);
-
-    await writeLog(`Arquivo JSON renomeado para: ${newFilePath}`);
+    await convertXmlToJson(
+      INPUT_PATH,
+      await getFormattedPath(OUTPUT_PATH)
+    ).catch(console.error);
 
     await wait(5000);
 
@@ -109,6 +116,20 @@ async function checkAndCreateFolder(folderPath) {
   }
 }
 
+async function convertXmlToJson(inputPath, outputPath) {
+  const xml = fs.readFileSync(inputPath, "utf8");
+
+  const parser = new xml2js.Parser({ explicitArray: false, mergeAttrs: true });
+
+  const result = await parser.parseStringPromise(xml);
+
+  const json = JSON.stringify(result, null, 2);
+
+  fs.writeFileSync(outputPath, json, "utf8");
+
+  await writeLog(`Arquivo JSON salvo em: ${outputPath}`);
+}
+
 async function getFormattedDate(date) {
   const options = {
     timeZone: "America/Sao_Paulo", // Configura o fuso horário para Brasília (BRT)
@@ -143,26 +164,11 @@ async function getFormattedPath(originalFilePath) {
   return `${fileNameWithoutExtension}_${formattedDate}_${formattedTime}.${fileExtension}`;
 }
 
-async function goToJsonDownloadPage(page) {
+async function goToXMLDownloadPage(page) {
   await page.goto(LINK, { waitUntil: "networkidle0" });
 
-  await page.waitForSelector(EXPORT_BUTTON_SELECTOR, { visible: true });
-  await page.click(EXPORT_BUTTON_SELECTOR);
-
-  await page.waitForXPath(
-    "//span[@class='btn-label' and contains(text(), 'JSON')]",
-    { visible: true }
-  );
-
-  const [jsonButton] = await page.$x(
-    "//span[@class='btn-label' and contains(text(), 'JSON')]"
-  );
-
-  if (jsonButton) {
-    await jsonButton.click();
-  } else {
-    await writeLog('Botão "JSON" não encontrado');
-  }
+  await page.waitForSelector(XML_BUTTON_SELECTOR, { visible: true });
+  await page.click(XML_BUTTON_SELECTOR);
 
   await wait(5000);
 }
@@ -190,20 +196,6 @@ async function makeDownload(page) {
   } else {
     await writeLog('Botão "Baixar" não encontrado.');
   }
-}
-
-async function renameDownloadedFile(oldPath, newPath) {
-  return new Promise((resolve, reject) => {
-    fs.rename(oldPath, newPath, (err) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-      resolve();
-    });
-  }).catch((error) => {
-    throw new Error(`Erro ao renomear o arquivo: ${error}`);
-  });
 }
 
 async function wait(time) {
@@ -237,7 +229,10 @@ async function waitForDownloadComplete(
   while (true) {
     const files = fs.readdirSync(downloadPath);
 
-    filename = files.find((file) => file.includes(expectedFilename));
+    // Encontre o arquivo que corresponde ao nome esperado e que não tenha a extensão .crdownload
+    filename = files.find(
+      (file) => file.includes(expectedFilename) && !file.endsWith(".crdownload")
+    );
 
     if (filename) {
       const filePath = path.join(downloadPath, filename);
@@ -245,9 +240,11 @@ async function waitForDownloadComplete(
       await wait(1000);
       const fileSize2 = fs.statSync(filePath).size;
 
+      // Se o tamanho do arquivo não mudou, o download está completo
       if (fileSize1 === fileSize2) break;
     }
 
+    // Verifique se o timeout foi atingido
     if (new Date().getTime() - startTime > timeout) {
       throw new Error("Download timeout");
     }
@@ -272,4 +269,4 @@ async function writeLog(receivedString) {
   console.log(string);
 }
 
-propositionDataJob();
+frequencyDataJob();

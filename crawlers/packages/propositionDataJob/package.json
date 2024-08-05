@@ -1,0 +1,11 @@
+{
+  "name": "proposition-data-job",
+  "version": "1.0.0",
+  "description": "Crawler para coletar dados de proposições",
+  "main": "src/propositionDataJob.js",
+  "scripts": {
+    "start": "node src/propositionDataJob.js"
+  },
+  "author": "",
+  "license": "ISC"
+}

@@ -1,0 +1,11 @@
+{
+  "name": "frequency-data-job",
+  "version": "1.0.0",
+  "description": "Crawler para coletar dados de frequência dos vereadores",
+  "main": "src/frequencyDataJob.js",
+  "scripts": {
+    "start": "node src/frequencyDataJob.js"
+  },
+  "author": "",
+  "license": "ISC"
+}

@@ -1,0 +1,11 @@
+{
+  "name": "councilor-data-job",
+  "version": "1.0.0",
+  "description": "Crawler para coletar dados dos vereadores",
+  "main": "src/councilorDataJob.js",
+  "scripts": {
+    "start": "node src/councilorDataJob.js"
+  },
+  "author": "",
+  "license": "ISC"
+}

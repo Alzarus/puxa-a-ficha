@@ -1,0 +1,22 @@
+{
+  "name": "puxa-a-ficha",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "start-councilor": "lerna run start --scope councilor-data-job",
+    "start-frequency": "lerna run start --scope frequency-data-job",
+    "start-general-productivity": "lerna run start --scope general-productivity-data-job",
+    "start-proposition": "lerna run start --scope proposition-data-job",
+    "start-proposition-productivity": "lerna run start --scope proposition-productivity-data-job"
+  },
+  "dependencies": {
+    "puppeteer": "^21.0.3",
+    "playwright": "^1.35.0",
+    "xml2js": "^0.4.23",
+    "fs": "0.0.1-security",
+    "path": "^0.12.7"
+  }
+}

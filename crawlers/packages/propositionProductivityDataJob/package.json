@@ -1,0 +1,11 @@
+{
+  "name": "proposition-productivity-data-job",
+  "version": "1.0.0",
+  "description": "Crawler para coletar dados de produtividade de proposições",
+  "main": "src/propositionProductivityDataJob.js",
+  "scripts": {
+    "start": "node src/propositionProductivityDataJob.js"
+  },
+  "author": "",
+  "license": "ISC"
+}
