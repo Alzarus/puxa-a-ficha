@@ -1,51 +1,48 @@
-version: '3.8'
+version: "3.8"
+
+env_file:
+  - .env.production # Use .env.production para ambiente de produção
 
 services:
   db:
     image: postgres:13
     environment:
-      POSTGRES_USER: your_user
-      POSTGRES_PASSWORD: your_password
-      POSTGRES_DB: your_db_name
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
     volumes:
       - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
 
   api:
     build: ./api
     environment:
-      DATABASE_URL: postgres://your_user:your_password@db:5432/your_db_name
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE}
     depends_on:
       - db
     ports:
       - "3000:3000"
+    volumes:
+      - ./api:/app # Mapeia a pasta da API para que você possa ver mudanças em tempo real
+
+  crawlers:
+    build:
+      context: ./crawlers
+      dockerfile: Dockerfile
+    depends_on:
+      - api
+    volumes:
+      - ./crawlers:/app/crawlers # Mapeia a pasta dos crawlers para dentro do contêiner
 
   frontend:
     build: ./frontend
     ports:
       - "80:80"
-    depends_on:
-      - api
-
-  crawler_councilor:
-    build: ./crawlers/councilorDataJob
-    volumes:
-      - ./crawlers/councilorDataJob/output:/app/output
-    command: npm start
-    depends_on:
-      - api
-
-  crawler_frequency:
-    build: ./crawlers/frequencyDataJob
-    volumes:
-      - ./crawlers/frequencyDataJob/output:/app/output
-    command: npm start
-    depends_on:
-      - api
-
-  service_uploader:
-    build: ./services/jsonUploader
-    volumes:
-      - ./services/jsonUploader/input:/app/input
     depends_on:
       - api
 
