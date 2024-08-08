@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity('general_productivity')
+@Entity('general_productivities')
 export class GeneralProductivity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -11,28 +11,31 @@ export class GeneralProductivity {
   @Column()
   parlamentarAutor: string;
 
-  @Column({ type: 'int', nullable: true })
+  @Column()
   emenda: number;
 
-  @Column({ type: 'int', nullable: true })
+  @Column()
   mensagem: number;
 
-  @Column({ type: 'int', nullable: true })
+  @Column()
   parecer: number;
 
-  @Column({ type: 'int', nullable: true })
+  @Column()
   relatoria: number;
 
-  @Column({ type: 'int', nullable: true })
+  @Column()
   substitutivo: number;
 
-  @Column({ type: 'int', nullable: true })
+  @Column()
   vistas: number;
 
-  @Column({ type: 'int', nullable: true })
+  @Column()
   votoRelator: number;
 
-  @Column({ type: 'int' })
+  @Column()
+  votoSeparado: number;
+
+  @Column()
   total: number;
 
   @Column()

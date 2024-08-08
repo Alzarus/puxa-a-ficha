@@ -8,7 +8,7 @@ export class PropositionProductivity {
   @Column()
   ano: number;
 
-  @Column()
+  @Column({ type: 'varchar', length: 255, nullable: true })
   parlamentarAutor: string;
 
   @Column({ type: 'int', nullable: true })
