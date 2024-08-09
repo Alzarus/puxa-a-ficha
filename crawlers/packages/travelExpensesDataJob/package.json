@@ -1,0 +1,11 @@
+{
+  "name": "travel-expenses-data-job",
+  "version": "1.0.0",
+  "description": "Crawler para coletar dados de despesas de viagens",
+  "main": "src/travelExpensesDataJob.js",
+  "scripts": {
+    "start": "node src/travelExpensesDataJob.js"
+  },
+  "author": "",
+  "license": "ISC"
+}

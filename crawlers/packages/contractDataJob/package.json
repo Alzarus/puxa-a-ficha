@@ -1,0 +1,11 @@
+{
+  "name": "contract-data-job",
+  "version": "1.0.0",
+  "description": "Crawler para coletar dados dos contratos da prefeitura",
+  "main": "src/contractDataJob.js",
+  "scripts": {
+    "start": "node src/contractDataJob.js"
+  },
+  "author": "",
+  "license": "ISC"
+}

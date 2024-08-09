@@ -2,38 +2,35 @@ const fs = require("fs");
 const path = require("path");
 const puppeteer = require("puppeteer");
 
-const MAIN_LINK = "https://www.cms.ba.gov.br";
-const ALL_COUNCILOR_LINK = "https://www.cms.ba.gov.br/vereadores";
+const MAIN_LINK = "https://www.cms.ba.gov.br/transparencia/despesas-viagem";
 const SCRIPT_TIME_LABEL = "Script Time";
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
-const PATH_FILES_FOLDER = "./councilorFiles";
-const PATH_PHOTOS_FOLDER = "./councilorPhotos";
+const PATH_FILES_FOLDER = "./travelExpensesFiles";
 
-async function councilorDataJob() {
+async function travelExpensesDataJob() {
   try {
     console.time(SCRIPT_TIME_LABEL);
 
     await checkAndCreateFolder(PATH_FILES_FOLDER);
-    await checkAndCreateFolder(PATH_PHOTOS_FOLDER);
 
     const [context, browser, page] = await initialConfigs();
 
-    await page.goto(ALL_COUNCILOR_LINK, { waitUntil: "networkidle0" });
+    await page.goto(MAIN_LINK, { waitUntil: "networkidle0" });
 
-    const urls = await getAllCouncilorUrls(page);
+    const pagesQuantity = await getTravelNumberPages(page);
 
-    const councilorInfoList = [];
+    let travelExpensesList = [];
 
-    for (const url of urls) {
-      const infoObject = await fetchCouncilorData(page, url);
-      councilorInfoList.push(infoObject);
+    for (let i = 1; i <= pagesQuantity; i++) {
+      let url = `${MAIN_LINK}?page=${i}`;
+      console.log(url);
     }
 
-    await saveDataToJson(
-      councilorInfoList,
-      await getFormattedPath("./councilorFiles/councilorInfo.json")
-    );
+    // await saveDataToJson(
+    //   councilorInfoList,
+    //   await getFormattedPath("./travelExpensesFiles/travelExpensesInfo.json")
+    // );
 
     await browser.close();
 
@@ -75,7 +72,7 @@ async function initialConfigs() {
 
   await page.setUserAgent(USER_AGENT);
 
-  await context.overridePermissions(ALL_COUNCILOR_LINK, ["geolocation"]);
+  await context.overridePermissions(MAIN_LINK, ["geolocation"]);
 
   await page.setViewport({ width: 1280, height: 800 });
 
@@ -95,19 +92,15 @@ async function checkAndCreateFolder(folderPath) {
   }
 }
 
-async function getAllCouncilorUrls(page) {
-  return await page.evaluate(() => {
-    const containers = Array.from(
-      document.querySelectorAll(".avatar-container")
-    );
-    return containers
-      .map((container) => {
-        const onclickValue = container.getAttribute("onclick");
-        const urlMatch = onclickValue.match(/'([^']+)'/);
-        return urlMatch ? urlMatch[1] : null;
-      })
-      .filter((url) => url !== null);
+async function getTravelNumberPages(page) {
+  const numberOfPages = await page.evaluate(() => {
+    const paginationElement = document.querySelector(".pagination");
+    const targetElement =
+      paginationElement.children[paginationElement.children.length - 2];
+    return parseInt(targetElement.textContent, 10);
   });
+
+  return numberOfPages;
 }
 
 async function getCouncilorActivityInfo(page) {
@@ -271,4 +264,4 @@ async function writeLog(receivedString) {
   console.log(string);
 }
 
-councilorDataJob();
+travelExpensesDataJob();

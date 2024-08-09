@@ -6,11 +6,13 @@
     "packages/*"
   ],
   "scripts": {
+    "start-contract": "lerna run start --scope contract-data-job",
     "start-councilor": "lerna run start --scope councilor-data-job",
     "start-frequency": "lerna run start --scope frequency-data-job",
     "start-general-productivity": "lerna run start --scope general-productivity-data-job",
     "start-proposition": "lerna run start --scope proposition-data-job",
-    "start-proposition-productivity": "lerna run start --scope proposition-productivity-data-job"
+    "start-proposition-productivity": "lerna run start --scope proposition-productivity-data-job",
+    "start-travel-expenses": "lerna run start --scope travel-expenses-data-job"
   },
   "dependencies": {
     "fs": "0.0.1-security",
