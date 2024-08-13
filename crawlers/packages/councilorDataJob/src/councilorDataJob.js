@@ -218,9 +218,6 @@ async function fetchCouncilorData(page, url) {
   infoObject["linkFoto"] = `${MAIN_LINK}${await getBackgroundImageUrl(page)}`;
   infoObject["emAtividade"] = await getCouncilorActivityInfo(page);
 
-  // console.log(infoObject);
-  // console.log(infoObject.extras["e-mail"]);
-
   await saveCouncilorPhoto(page, infoObject);
 
   return infoObject;

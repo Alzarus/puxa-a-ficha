@@ -9,17 +9,9 @@ const EXPORT_BUTTON_SELECTOR = "#sc_btgp_btn_group_1_top";
 const LINK = "https://cmsalvador.sys.inf.br/ca/contrato/";
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
-const INPUT_PATH = path.join(
-  __dirname,
-  "../contractFiles/contrato.json"
-);
+const INPUT_PATH = path.join(__dirname, "../contractFiles/contrato.json");
 const SCRIPT_TIME_LABEL = "Script Time";
 const PATH_FILES_FOLDER = "./contractFiles";
-
-// TODO: COMO RODAR O JOB NOVAMENTE EM CASO DE ERRO?
-// DE QUEM EH A RESPONSABILIDADE DE SUBIR OS DADOS PARA A API? ESSE JOB OU UM NOVO?
-// COMO APENAS SUBIR OS DADOS NOVOS? EVITAR SOBRESCRITA DESNECESSARIA? MELHORAR A PERFORMANCE
-// MELHORAR LOGS
 
 async function contractDataJob() {
   try {

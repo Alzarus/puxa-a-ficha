@@ -17,11 +17,6 @@ const T_ROWS_SELECTOR = "#sc-ui-summary-body > tbody:nth-child(2) > tr";
 const SCRIPT_TIME_LABEL = "Script Time";
 const PATH_FILES_FOLDER = "./propositionProductivityFiles";
 
-// TODO: COMO RODAR O JOB NOVAMENTE EM CASO DE ERRO?
-// DE QUEM EH A RESPONSABILIDADE DE SUBIR OS DADOS PARA A API? ESSE JOB OU UM NOVO?
-// COMO APENAS SUBIR OS DADOS NOVOS? EVITAR SOBRESCRITA DESNECESSARIA? MELHORAR A PERFORMANCE
-// MELHORAR LOGS
-
 async function propositionProductivityDataJob() {
   try {
     console.time(SCRIPT_TIME_LABEL);
@@ -158,8 +153,6 @@ async function getTableData(page) {
         } else {
           rowData[headers[j]] = text.trim();
         }
-
-        // console.log(text.trim());
       }
 
       // Adiciona uma coluna Tipo para identificar a linha

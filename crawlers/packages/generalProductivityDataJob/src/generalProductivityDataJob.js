@@ -17,11 +17,6 @@ const T_ROWS_SELECTOR = "#sc-ui-summary-body > tbody:nth-child(2) > tr";
 const SCRIPT_TIME_LABEL = "Script Time";
 const PATH_FILES_FOLDER = "./generalProductivityFiles";
 
-// TODO: COMO RODAR O JOB NOVAMENTE EM CASO DE ERRO?
-// DE QUEM EH A RESPONSABILIDADE DE SUBIR OS DADOS PARA A API? ESSE JOB OU UM NOVO?
-// COMO APENAS SUBIR OS DADOS NOVOS? EVITAR SOBRESCRITA DESNECESSARIA? MELHORAR A PERFORMANCE
-// MELHORAR LOGS
-
 async function generalProductivityDataJob() {
   try {
     console.time(SCRIPT_TIME_LABEL);
@@ -126,7 +121,6 @@ async function getTableData(page) {
       const cells = await rows[i].$$("td");
       let auxList = [];
       let rowData = {};
-      // let isTotalLine = !isNaN(parseInt(await cells[0].textContent(), 10));
       let text = await cells[0].textContent();
       let isTotalLine = text.toLowerCase().includes("total");
 
@@ -142,7 +136,6 @@ async function getTableData(page) {
           switch (j) {
             case 0:
               rowData[headers[j]] = previousYear;
-              // rowData[headers[j]] = text.trim();
               break;
             case 1:
               rowData[headers[j]] = "";
@@ -156,8 +149,6 @@ async function getTableData(page) {
         } else {
           rowData[headers[j]] = text.trim();
         }
-
-        // console.log(text.trim());
       }
 
       // Adiciona uma coluna Tipo para identificar a linha

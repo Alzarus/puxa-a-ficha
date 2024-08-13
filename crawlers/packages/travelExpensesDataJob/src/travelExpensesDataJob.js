@@ -24,13 +24,27 @@ async function travelExpensesDataJob() {
 
     for (let i = 1; i <= pagesQuantity; i++) {
       let url = `${MAIN_LINK}?page=${i}`;
-      console.log(url);
+      console.log(`Acessando URL: ${url}`);
+
+      await page.goto(url, { waitUntil: "networkidle0", timeout: 0 });
+
+      // Espera o seletor aparecer na página
+      await page.waitForSelector(".audiencias_docs.list-none li", {
+        timeout: 5000,
+      });
+
+      const pageDetails = await getAllTravelDetails(page);
+      console.log(`Detalhes encontrados na página ${i}: ${pageDetails.length}`);
+
+      travelExpensesList = travelExpensesList.concat(pageDetails);
     }
 
-    // await saveDataToJson(
-    //   councilorInfoList,
-    //   await getFormattedPath("./travelExpensesFiles/travelExpensesInfo.json")
-    // );
+    console.log(travelExpensesList);
+
+    await saveDataToJson(
+      travelExpensesList,
+      await getFormattedPath("./travelExpensesFiles/travelExpensesInfo.json")
+    );
 
     await browser.close();
 
@@ -92,6 +106,46 @@ async function checkAndCreateFolder(folderPath) {
   }
 }
 
+async function getAllTravelDetails(page) {
+  const allDetails = await page.evaluate(() => {
+    const detailsList = [];
+    const elements = document.querySelectorAll(".audiencias_docs.list-none li");
+
+    elements.forEach((element) => {
+      const textContent = element.textContent.trim();
+
+      // Usando regex para capturar os valores
+      const info = {
+        data: textContent.match(/Data:\s*(.*?)(?:\n|Tipo)/)?.[1]?.trim() || "",
+        tipo:
+          textContent.match(/Tipo:\s*(.*?)(?:\n|Usuário)/)?.[1]?.trim() || "",
+        usuario:
+          textContent.match(/Usuário:\s*(.*?)(?:\n|Valor)/)?.[1]?.trim() || "",
+        valor:
+          textContent
+            .match(/Valor:\s*(.*?)(?:\n|Localidade)/)?.[1]
+            ?.trim()
+            .replace("R$ ", "") || "",
+        localidade:
+          textContent
+            .match(/Localidade:\s*(.*?)(?:\n|Justificativa)/)?.[1]
+            ?.trim() || "",
+        justificativa:
+          textContent.match(/Justificativa:\s*(.*)/)?.[1]?.trim() || "",
+      };
+
+      // Somente adiciona se a informação foi encontrada
+      if (info.data) {
+        detailsList.push(info);
+      }
+    });
+
+    return detailsList;
+  });
+
+  return allDetails;
+}
+
 async function getTravelNumberPages(page) {
   const numberOfPages = await page.evaluate(() => {
     const paginationElement = document.querySelector(".pagination");
@@ -100,68 +154,8 @@ async function getTravelNumberPages(page) {
     return parseInt(targetElement.textContent, 10);
   });
 
+  console.log(`Total de páginas: ${numberOfPages}`);
   return numberOfPages;
-}
-
-async function getCouncilorActivityInfo(page) {
-  return await page
-    .$eval("#content > div > div > div.col-md-8 > h2", (elemento) => {
-      return elemento.textContent.toLowerCase().includes("legislatura");
-    })
-    .catch(() => {
-      return false;
-    });
-}
-
-async function getCouncilorDescription(page) {
-  return await page.evaluate(() => {
-    const container = document.querySelector("#fade-content");
-    if (!container) return "";
-
-    const paragraphs = Array.from(container.querySelectorAll("p"));
-    const paragraphsTexts = paragraphs
-      .map((p) => p.textContent.trim().replace(/\n/g, " "))
-      .join(" ");
-
-    return paragraphsTexts;
-  });
-}
-
-async function getCouncilorInfoObject(page) {
-  return await page.evaluate(() => {
-    const infoDiv = document.querySelector(".info");
-    if (!infoDiv) return null;
-
-    const h4 = infoDiv.querySelector("h4")
-      ? infoDiv.querySelector("h4").innerText
-      : "";
-    const partido = infoDiv.querySelector(".partido")
-      ? infoDiv.querySelector(".partido").innerText
-      : "";
-    const extras = Array.from(infoDiv.querySelectorAll(".extra")).map(
-      (p) => p.innerText
-    );
-
-    const infoObj = { nome: h4, partido: partido, extras: {} };
-
-    extras.forEach((extra) => {
-      const [label, value] = extra.split(":").map((s) => s.trim());
-      if (label && value) {
-        infoObj.extras[label.toLowerCase().replace(/ /g, "_")] = value;
-      }
-    });
-
-    return infoObj;
-  });
-}
-
-async function getBackgroundImageUrl(page) {
-  return await page.evaluate(() => {
-    const photoEl = document.querySelector(".photo");
-    if (!photoEl) return "";
-    const bgImage = photoEl.style.backgroundImage;
-    return bgImage.replace(/url\((['"])?(.*?)\1\)/gi, "$2");
-  });
 }
 
 async function getFormattedDate(date) {
@@ -201,47 +195,6 @@ async function getFormattedPath(originalFilePath) {
 async function getTimeNow() {
   const now = new Date();
   return await getFormattedDate(now);
-}
-
-async function fetchCouncilorData(page, url) {
-  await page.goto(`${MAIN_LINK}${url}`, { waitUntil: "networkidle0" });
-
-  const infoObject = await getCouncilorInfoObject(page);
-  infoObject["descricao"] = await getCouncilorDescription(page);
-  infoObject["linkFoto"] = `${MAIN_LINK}${await getBackgroundImageUrl(page)}`;
-  infoObject["emAtividade"] = await getCouncilorActivityInfo(page);
-
-  // console.log(infoObject);
-  // console.log(infoObject.extras["e-mail"]);
-
-  await saveCouncilorPhoto(page, infoObject);
-
-  return infoObject;
-}
-
-function renameStringToFileUsage(receivedString) {
-  return receivedString.replace(/\s+/g, "-");
-}
-
-async function saveCouncilorPhoto(page, infoObject) {
-  try {
-    await page.goto(infoObject.linkFoto, { waitUntil: "networkidle0" });
-
-    const imageBuffer = await page.evaluate(() =>
-      fetch(document.location.href)
-        .then((res) => res.arrayBuffer())
-        .then((buf) => Array.from(new Uint8Array(buf)))
-    );
-
-    const filePath = `./councilorPhotos/${renameStringToFileUsage(
-      infoObject.nome
-    )}.jpg`;
-    fs.writeFileSync(filePath, Buffer.from(imageBuffer));
-
-    await writeLog(`Imagem salva com sucesso: ${filePath}`);
-  } catch (error) {
-    await writeLog(error);
-  }
 }
 
 async function saveDataToJson(data, filename) {
