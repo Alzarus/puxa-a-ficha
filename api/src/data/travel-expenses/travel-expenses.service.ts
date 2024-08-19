@@ -1,26 +1,50 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateTravelExpenseDto } from './dto/create-travel-expense.dto';
 import { UpdateTravelExpenseDto } from './dto/update-travel-expense.dto';
+import { TravelExpense } from './entities/travel-expense.entity';
 
 @Injectable()
 export class TravelExpensesService {
-  create(createTravelExpenseDto: CreateTravelExpenseDto) {
-    return 'This action adds a new travelExpense';
+  constructor(
+    @InjectRepository(TravelExpense)
+    private readonly travelExpensesRepository: Repository<TravelExpense>,
+  ) {}
+
+  create(
+    createTravelExpenseDto: CreateTravelExpenseDto,
+  ): Promise<TravelExpense> {
+    const travelExpense = this.travelExpensesRepository.create(
+      createTravelExpenseDto,
+    );
+    return this.travelExpensesRepository.save(travelExpense);
   }
 
-  findAll() {
-    return `This action returns all travelExpenses`;
+  findAll(): Promise<TravelExpense[]> {
+    return this.travelExpensesRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} travelExpense`;
+  async findOne(id: number): Promise<TravelExpense> {
+    const travelExpense = await this.travelExpensesRepository.findOneBy({ id });
+    if (!travelExpense) {
+      throw new NotFoundException(`TravelExpense with ID ${id} not found`);
+    }
+    return travelExpense;
   }
 
-  update(id: number, updateTravelExpenseDto: UpdateTravelExpenseDto) {
-    return `This action updates a #${id} travelExpense`;
+  async update(
+    id: number,
+    updateTravelExpenseDto: UpdateTravelExpenseDto,
+  ): Promise<TravelExpense> {
+    await this.travelExpensesRepository.update(id, updateTravelExpenseDto);
+    return this.findOne(id);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} travelExpense`;
+  async remove(id: number): Promise<void> {
+    const result = await this.travelExpensesRepository.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException(`TravelExpense with ID ${id} not found`);
+    }
   }
 }

@@ -5,30 +5,30 @@ export class Contract {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ type: 'varchar', length: 255 })
   numero: string;
 
-  @Column()
+  @Column({ type: 'varchar', length: 255 })
   contratante: string;
 
-  @Column()
+  @Column({ type: 'varchar', length: 255 })
   contratado: string;
 
-  @Column()
+  @Column({ type: 'text' })
   objeto: string;
 
-  @Column()
+  @Column({ type: 'decimal' })
   valor: number;
 
-  @Column()
+  @Column({ type: 'date' })
   dataAssinatura: Date;
 
-  @Column()
+  @Column({ type: 'varchar', length: 255 })
   vigencia: string;
 
-  @Column()
+  @Column({ type: 'varchar', length: 100 })
   status: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   link: string;
 }

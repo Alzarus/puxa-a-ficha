@@ -1,26 +1,43 @@
 import { Injectable } from '@nestjs/common';
 import { CreateCouncilorDto } from './dto/create-councilor.dto';
 import { UpdateCouncilorDto } from './dto/update-councilor.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Councilor } from './entities/councilor.entity';
 
 @Injectable()
 export class CouncilorService {
-  create(createCouncilorDto: CreateCouncilorDto) {
-    return 'This action adds a new councilor';
+  constructor(
+    @InjectRepository(Councilor)
+    private councilorRepository: Repository<Councilor>,
+  ) {}
+
+  async create(createCouncilorDto: CreateCouncilorDto): Promise<Councilor> {
+    const councilor = this.councilorRepository.create(createCouncilorDto);
+    return this.councilorRepository.save(councilor);
   }
 
-  findAll() {
-    return `This action returns all councilor`;
+  async findAll(): Promise<Councilor[]> {
+    return this.councilorRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} councilor`;
+  async findOne(id: number): Promise<Councilor> {
+    return this.councilorRepository.findOne({
+      where: {
+        id: id,
+      },
+    });
   }
 
-  update(id: number, updateCouncilorDto: UpdateCouncilorDto) {
-    return `This action updates a #${id} councilor`;
+  async update(
+    id: number,
+    updateCouncilorDto: UpdateCouncilorDto,
+  ): Promise<Councilor> {
+    await this.councilorRepository.update(id, updateCouncilorDto);
+    return this.findOne(id);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} councilor`;
+  async remove(id: number): Promise<void> {
+    await this.councilorRepository.delete(id);
   }
 }

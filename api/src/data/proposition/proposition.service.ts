@@ -1,26 +1,41 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreatePropositionDto } from './dto/create-proposition.dto';
 import { UpdatePropositionDto } from './dto/update-proposition.dto';
+import { Proposition } from './entities/proposition.entity';
 
 @Injectable()
 export class PropositionService {
-  create(createPropositionDto: CreatePropositionDto) {
-    return 'This action adds a new proposition';
+  constructor(
+    @InjectRepository(Proposition)
+    private propositionRepository: Repository<Proposition>,
+  ) {}
+
+  create(createPropositionDto: CreatePropositionDto): Promise<Proposition> {
+    const proposition = this.propositionRepository.create(createPropositionDto);
+    return this.propositionRepository.save(proposition);
   }
 
-  findAll() {
-    return `This action returns all proposition`;
+  findAll(): Promise<Proposition[]> {
+    return this.propositionRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} proposition`;
+  findOne(id: number): Promise<Proposition> {
+    return this.propositionRepository.findOne({
+      where: { id },
+    });
   }
 
-  update(id: number, updatePropositionDto: UpdatePropositionDto) {
-    return `This action updates a #${id} proposition`;
+  async update(
+    id: number,
+    updatePropositionDto: UpdatePropositionDto,
+  ): Promise<Proposition> {
+    await this.propositionRepository.update(id, updatePropositionDto);
+    return this.findOne(id);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} proposition`;
+  async remove(id: number): Promise<void> {
+    await this.propositionRepository.delete(id);
   }
 }

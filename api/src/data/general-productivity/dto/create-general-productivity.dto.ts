@@ -1,8 +1,8 @@
 import { IsString, IsInt, IsOptional } from 'class-validator';
 
 export class CreateGeneralProductivityDto {
-  @IsString()
-  ano: string;
+  @IsInt()
+  ano: number;
 
   @IsString()
   parlamentarAutor: string;
