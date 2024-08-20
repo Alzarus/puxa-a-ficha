@@ -1,7 +1,7 @@
 version: "3.8"
 
 env_file:
-  - .env.production # Use .env.production para ambiente de produção
+  - .env.production
 
 services:
   db:
@@ -28,7 +28,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./api:/app # Mapeia a pasta da API para que você possa ver mudanças em tempo real
+      - ./api:/app
 
   crawlers:
     build:
@@ -37,7 +37,16 @@ services:
     depends_on:
       - api
     volumes:
-      - ./crawlers:/app/crawlers # Mapeia a pasta dos crawlers para dentro do contêiner
+      - ./crawlers:/app/crawlers
+
+  json-processor:
+    build: ./json-processor
+    depends_on:
+      - crawlers
+      - api
+    volumes:
+      - ./crawlers:/app/crawlers
+    command: npm run process-json
 
   frontend:
     build: ./frontend

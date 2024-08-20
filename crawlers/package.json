@@ -1,7 +1,10 @@
 {
   "name": "puxa-a-ficha-crawlers",
   "version": "1.0.0",
+  "description": "",
+  "author": "",
   "private": true,
+  "license": "UNLICENSED",
   "workspaces": [
     "packages/*"
   ],
