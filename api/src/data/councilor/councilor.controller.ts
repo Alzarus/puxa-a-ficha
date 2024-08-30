@@ -6,10 +6,12 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { CouncilorService } from './councilor.service';
 import { CreateCouncilorDto } from './dto/create-councilor.dto';
 import { UpdateCouncilorDto } from './dto/update-councilor.dto';
+import { Councilor } from './entities/councilor.entity';
 
 @Controller('councilor')
 export class CouncilorController {
@@ -41,5 +43,10 @@ export class CouncilorController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.councilorService.remove(+id);
+  }
+
+  @Get()
+  async findByName(@Query('nome') nome: string): Promise<Councilor[]> {
+    return this.councilorService.findByName(nome);
   }
 }

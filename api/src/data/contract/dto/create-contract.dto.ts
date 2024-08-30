@@ -2,30 +2,34 @@ import { IsString, IsNumber, IsDateString, IsOptional } from 'class-validator';
 
 export class CreateContractDto {
   @IsString()
-  numero: string;
+  contrato: string;
 
   @IsString()
-  contratante: string;
-
-  @IsString()
-  contratado: string;
-
-  @IsString()
-  objeto: string;
-
-  @IsNumber()
-  valor: number;
+  cad_nome_completo: string;
 
   @IsDateString()
-  dataAssinatura: string;
+  con_dt_assinatura: Date;
+
+  @IsDateString()
+  con_dt_inicio: Date;
+
+  @IsDateString()
+  con_dt_final: Date;
+
+  @IsNumber()
+  con_valor: number;
 
   @IsString()
-  vigencia: string;
+  con_tempo_maximo: string;
 
-  @IsString()
-  status: string;
+  @IsDateString()
+  con_dt_publicacao: Date;
 
-  @IsString()
   @IsOptional()
-  link: string;
+  @IsString()
+  diario?: string;
+
+  @IsOptional()
+  @IsString()
+  pdf?: string;
 }

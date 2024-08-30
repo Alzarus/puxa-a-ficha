@@ -32,5 +32,5 @@ export class CreateCouncilorDto {
 
   @IsOptional()
   @IsString()
-  enderecoDeGabinete?: string;
+  endereço_de_gabinete?: string;
 }

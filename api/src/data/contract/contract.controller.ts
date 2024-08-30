@@ -26,20 +26,25 @@ export class ContractController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.contractService.findOne(+id);
+  findOne(@Param('id') id: number) {
+    return this.contractService.findOne(id);
   }
 
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param('id') id: number,
     @Body() updateContractDto: UpdateContractDto,
   ) {
-    return this.contractService.update(+id, updateContractDto);
+    return this.contractService.update(id, updateContractDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.contractService.remove(+id);
+  remove(@Param('id') id: number) {
+    return this.contractService.remove(id);
+  }
+
+  @Get('latest')
+  findLatest() {
+    return this.contractService.findLatest();
   }
 }

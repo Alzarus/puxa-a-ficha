@@ -14,6 +14,23 @@ export class CouncilorService {
 
   async create(createCouncilorDto: CreateCouncilorDto): Promise<Councilor> {
     const councilor = this.councilorRepository.create(createCouncilorDto);
+    // nome: string;
+    // partido: string;
+    // descricao: string;
+    // linkFoto: string;
+    // emAtividade: boolean;
+    // nascimento: string;
+    // telefone: string;
+    // email: string;
+    // enderecoDeGabinete: string;
+    // const councilor = this.councilorRepository.create({
+    //   nome: createCouncilorDto.nome,
+    //   partido: createCouncilorDto.partido,
+    //   descricao: createCouncilorDto.descricao,
+    //   linkFoto: createCouncilorDto.linkFoto,
+    //   emAtividade: createCouncilorDto.emAtividade,
+    //   nascimento: createCouncilorDto.nascimento
+    // });
     return this.councilorRepository.save(councilor);
   }
 
@@ -26,6 +43,12 @@ export class CouncilorService {
       where: {
         id: id,
       },
+    });
+  }
+
+  async findByName(nome: string): Promise<Councilor[]> {
+    return this.councilorRepository.find({
+      where: { nome: nome },
     });
   }
 

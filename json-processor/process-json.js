@@ -2,42 +2,221 @@ const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
 
-const jsonDir = "/app/crawlers/output"; // Diretório onde os JSONs são salvos pelos crawlers
+const directories = {
+  contract: "/app/crawlers/contractFiles",
+  councilor: "/app/crawlers/councilorFiles",
+  frequency: "/app/crawlers/frequencyFiles",
+  generalProductivity: "/app/crawlers/generalProductivityFiles",
+  proposition: "/app/crawlers/propositionFiles",
+  propositionProductivity: "/app/crawlers/propositionProductivityFiles",
+  travelExpenses: "/app/crawlers/travelExpensesFiles",
+};
+
+const apiEndpoint = "http://api:3000";
 
 async function processJsonFiles() {
-  const files = fs.readdirSync(jsonDir);
+  for (const [key, dir] of Object.entries(directories)) {
+    console.log(`Processando arquivos no diretório: ${dir}`);
+    const files = fs.readdirSync(dir);
 
-  for (const file of files) {
-    if (path.extname(file) === ".json") {
-      const filePath = path.join(jsonDir, file);
-      const data = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    for (const file of files) {
+      if (path.extname(file) === ".json") {
+        const filePath = path.join(dir, file);
+        const data = JSON.parse(fs.readFileSync(filePath, "utf8"));
 
-      // Verifique se os dados são duplicados ou não
-      const isDuplicate = await checkForDuplicates(data);
+        let processedData;
+        switch (key) {
+          case "contract":
+            processedData = await checkForDuplicatesContract(data);
+            break;
+          case "councilor":
+            processedData = await checkForDuplicatesCouncilor(data);
+            break;
+          case "frequency":
+            processedData = await checkForDuplicatesFrequency(data);
+            break;
+          case "generalProductivity":
+            processedData = await checkForDuplicatesGeneralProductivity(data);
+            break;
+          case "proposition":
+            processedData = await checkForDuplicatesProposition(data);
+            break;
+          case "propositionProductivity":
+            processedData = await checkForDuplicatesPropositionProductivity(
+              data
+            );
+            break;
+          case "travelExpenses":
+            processedData = await checkForDuplicatesTravelExpenses(data);
+            break;
+          default:
+            processedData = data;
+        }
 
-      if (!isDuplicate) {
-        // Envie os dados para a API
-        await sendToApi(data);
-      } else {
-        console.log(`Dados duplicados encontrados no arquivo ${file}.`);
+        if (processedData.length > 0) {
+          await sendToApi(processedData, key);
+        } else {
+          console.log(`Nenhum dado novo encontrado no arquivo ${file}.`);
+        }
       }
     }
   }
 }
 
-async function checkForDuplicates(data) {
-  // Implementar lógica para verificar duplicação
-  // Por exemplo, consultar a API para verificar se o dado já existe
-  // Pode usar identificadores únicos como IDs ou timestamps
-  return false; // Placeholder: Retornar true se duplicado
+async function checkForDuplicatesContract(data) {
+  try {
+    const response = await axios.get(`${apiEndpoint}/contracts/latest`);
+    const lastDate = new Date(response.data.con_dt_publicacao);
+    return data.filter(
+      (contract) => new Date(contract.con_dt_publicacao) > lastDate
+    );
+  } catch (error) {
+    console.error("Erro ao verificar duplicados para contracts:", error);
+    return data;
+  }
 }
 
-async function sendToApi(data) {
+async function checkForDuplicatesCouncilor(data) {
   try {
-    await axios.post("http://api:3000/your-endpoint", data);
-    console.log("Dados enviados para a API com sucesso.");
+    const newCouncilors = [];
+    for (const councilor of data) {
+      const response = await axios.get(
+        `${apiEndpoint}/councilors?nome=${encodeURIComponent(councilor.nome)}`
+      );
+      if (response.data.length === 0) {
+        newCouncilors.push(councilor);
+      }
+    }
+    return newCouncilors;
   } catch (error) {
-    console.error("Erro ao enviar dados para a API:", error);
+    console.error("Erro ao verificar duplicados para councilors:", error);
+    return data;
+  }
+}
+
+async function checkForDuplicatesFrequency(data) {
+  try {
+    const response = await axios.get(`${apiEndpoint}/frequencies/latest`);
+    const lastSessionNumber = response.data.pre_ses_numero;
+    const lastSessionYear = response.data.pre_ses_ano;
+    return data.filter(
+      (frequency) =>
+        frequency.pre_ses_ano > lastSessionYear ||
+        (frequency.pre_ses_ano === lastSessionYear &&
+          frequency.pre_ses_numero > lastSessionNumber)
+    );
+  } catch (error) {
+    console.error("Erro ao verificar duplicados para frequencies:", error);
+    return data;
+  }
+}
+
+async function checkForDuplicatesGeneralProductivity(data) {
+  try {
+    const response = await axios.get(`${apiEndpoint}/general-productivity`);
+    const existingData = response.data;
+
+    return data.filter((item) => {
+      return !existingData.some(
+        (existingItem) =>
+          existingItem.Tipo === item.Tipo &&
+          existingItem.Ano === item.Ano &&
+          (item.Tipo === "Total Geral" ||
+            item.Tipo === "Total" ||
+            item.Tipo === "Autor")
+      );
+    });
+  } catch (error) {
+    console.error(
+      "Erro ao verificar duplicados para general productivity:",
+      error
+    );
+    return data;
+  }
+}
+
+async function checkForDuplicatesProposition(data) {
+  try {
+    const response = await axios.get(`${apiEndpoint}/propositions/latest`);
+    const lastMovementDate = new Date(response.data.tra_dt_movimentacao);
+    return data.filter(
+      (proposition) =>
+        new Date(proposition.tra_dt_movimentacao) > lastMovementDate
+    );
+  } catch (error) {
+    console.error("Erro ao verificar duplicados para propositions:", error);
+    return data;
+  }
+}
+
+async function checkForDuplicatesPropositionProductivity(data) {
+  try {
+    const response = await axios.get(`${apiEndpoint}/proposition-productivity`);
+    const existingData = response.data;
+
+    return data.filter((item) => {
+      return !existingData.some(
+        (existingItem) =>
+          existingItem.Tipo === item.Tipo &&
+          existingItem.Ano === item.Ano &&
+          (item.Tipo === "Total Geral" ||
+            item.Tipo === "Total" ||
+            item.Tipo === "Autor")
+      );
+    });
+  } catch (error) {
+    console.error(
+      "Erro ao verificar duplicados para proposition productivity:",
+      error
+    );
+    return data;
+  }
+}
+
+async function checkForDuplicatesTravelExpenses(data) {
+  try {
+    const response = await axios.get(`${apiEndpoint}/travel-expenses/latest`);
+    const lastDate = new Date(response.data.data);
+    return data.filter((expense) => new Date(expense.data) > lastDate);
+  } catch (error) {
+    console.error("Erro ao verificar duplicados para travel expenses:", error);
+    return data;
+  }
+}
+
+async function sendToApi(data, dataType) {
+  try {
+    let endpoint;
+    switch (dataType) {
+      case "contract":
+        endpoint = `${apiEndpoint}/contracts`;
+        break;
+      case "councilor":
+        endpoint = `${apiEndpoint}/councilors`;
+        break;
+      case "frequency":
+        endpoint = `${apiEndpoint}/frequencies`;
+        break;
+      case "generalProductivity":
+        endpoint = `${apiEndpoint}/general-productivity`;
+        break;
+      case "proposition":
+        endpoint = `${apiEndpoint}/propositions`;
+        break;
+      case "propositionProductivity":
+        endpoint = `${apiEndpoint}/proposition-productivity`;
+        break;
+      case "travelExpenses":
+        endpoint = `${apiEndpoint}/travel-expenses`;
+        break;
+      default:
+        throw new Error("Tipo de dado desconhecido");
+    }
+
+    await axios.post(endpoint, data);
+    console.log(`Dados enviados para ${endpoint} com sucesso.`);
+  } catch (error) {
+    console.error(`Erro ao enviar dados para ${dataType}:`, error);
   }
 }
 

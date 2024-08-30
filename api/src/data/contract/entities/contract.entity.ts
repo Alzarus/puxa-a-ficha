@@ -6,29 +6,32 @@ export class Contract {
   id: number;
 
   @Column({ type: 'varchar', length: 255 })
-  numero: string;
+  numero_contrato: string;
 
   @Column({ type: 'varchar', length: 255 })
-  contratante: string;
-
-  @Column({ type: 'varchar', length: 255 })
-  contratado: string;
-
-  @Column({ type: 'text' })
-  objeto: string;
-
-  @Column({ type: 'decimal' })
-  valor: number;
+  nome_contratado: string;
 
   @Column({ type: 'date' })
-  dataAssinatura: Date;
+  data_assinatura: Date;
+
+  @Column({ type: 'date' })
+  data_inicio: Date;
+
+  @Column({ type: 'date' })
+  data_fim: Date;
+
+  @Column({ type: 'decimal', precision: 15, scale: 2 })
+  valor_contrato: number;
 
   @Column({ type: 'varchar', length: 255 })
-  vigencia: string;
+  tempo_maximo_execucao: string;
 
-  @Column({ type: 'varchar', length: 100 })
-  status: string;
+  @Column({ type: 'date' })
+  data_publicacao: Date;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-  link: string;
+  diario_oficial: string;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  link_pdf: string;
 }
