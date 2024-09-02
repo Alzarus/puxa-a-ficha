@@ -66,7 +66,7 @@ async function processJsonFiles() {
 async function checkForDuplicatesContract(data) {
   try {
     const response = await axios.get(`${apiEndpoint}/contracts/latest`);
-    const lastDate = new Date(response.data.con_dt_publicacao);
+    const lastDate = new Date(response.data.data_publicacao);
     return data.filter(
       (contract) => new Date(contract.con_dt_publicacao) > lastDate
     );
@@ -97,8 +97,8 @@ async function checkForDuplicatesCouncilor(data) {
 async function checkForDuplicatesFrequency(data) {
   try {
     const response = await axios.get(`${apiEndpoint}/frequencies/latest`);
-    const lastSessionNumber = response.data.pre_ses_numero;
-    const lastSessionYear = response.data.pre_ses_ano;
+    const lastSessionNumber = response.data.numeroSessao;
+    const lastSessionYear = response.data.anoSessao;
     return data.filter(
       (frequency) =>
         frequency.pre_ses_ano > lastSessionYear ||
@@ -117,14 +117,23 @@ async function checkForDuplicatesGeneralProductivity(data) {
     const existingData = response.data;
 
     return data.filter((item) => {
-      return !existingData.some(
-        (existingItem) =>
-          existingItem.Tipo === item.Tipo &&
-          existingItem.Ano === item.Ano &&
+      return !existingData.some((existingItem) => {
+        const itemAno = parseInt(item.Ano, 10);
+        const existingAno = parseInt(existingItem.Ano, 10);
+        const isSameYear = itemAno === existingAno;
+
+        const isSameType =
+          existingItem.Tipo.trim().toLowerCase() ===
+          item.Tipo.trim().toLowerCase();
+
+        return (
+          isSameType &&
+          isSameYear &&
           (item.Tipo === "Total Geral" ||
             item.Tipo === "Total" ||
             item.Tipo === "Autor")
-      );
+        );
+      });
     });
   } catch (error) {
     console.error(
@@ -155,14 +164,23 @@ async function checkForDuplicatesPropositionProductivity(data) {
     const existingData = response.data;
 
     return data.filter((item) => {
-      return !existingData.some(
-        (existingItem) =>
-          existingItem.Tipo === item.Tipo &&
-          existingItem.Ano === item.Ano &&
+      return !existingData.some((existingItem) => {
+        const itemAno = parseInt(item.Ano, 10);
+        const existingAno = parseInt(existingItem.Ano, 10);
+        const isSameYear = itemAno === existingAno;
+
+        const isSameType =
+          existingItem.Tipo.trim().toLowerCase() ===
+          item.Tipo.trim().toLowerCase();
+
+        return (
+          isSameType &&
+          isSameYear &&
           (item.Tipo === "Total Geral" ||
             item.Tipo === "Total" ||
             item.Tipo === "Autor")
-      );
+        );
+      });
     });
   } catch (error) {
     console.error(

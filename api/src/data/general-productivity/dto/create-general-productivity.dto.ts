@@ -1,47 +1,70 @@
 import { IsString, IsInt, IsOptional } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateGeneralProductivityDto {
+  @Transform(({ value }) => parseCustom(value))
   @IsInt()
-  ano: number;
+  'Ano': number;
 
   @IsString()
-  parlamentarAutor: string;
+  'Parlamentar/Autor': string;
 
   @IsOptional()
+  @Transform(({ value }) => parseCustom(value))
   @IsInt()
-  emenda?: number;
+  'Emenda'?: number;
 
   @IsOptional()
+  @Transform(({ value }) => parseCustom(value))
   @IsInt()
-  mensagem?: number;
+  'Mensagem'?: number;
 
   @IsOptional()
+  @Transform(({ value }) => parseCustom(value))
   @IsInt()
-  parecer?: number;
+  'Parecer'?: number;
 
   @IsOptional()
+  @Transform(({ value }) => parseCustom(value))
   @IsInt()
-  relatoria?: number;
+  'Relatoria'?: number;
 
   @IsOptional()
+  @Transform(({ value }) => parseCustom(value))
   @IsInt()
-  substitutivo?: number;
+  'Substitutivo'?: number;
 
   @IsOptional()
+  @Transform(({ value }) => parseCustom(value))
   @IsInt()
-  vistas?: number;
+  'Vistas'?: number;
 
   @IsOptional()
+  @Transform(({ value }) => parseCustom(value))
   @IsInt()
-  votoRelator?: number;
+  'Voto do Relator'?: number;
+
+  @Transform(({ value }) => parseCustom(value))
+  @IsInt()
+  'Total': number;
 
   @IsOptional()
+  @Transform(({ value }) => parseCustom(value))
   @IsInt()
-  votoSeparado?: number;
-
-  @IsInt()
-  total: number;
+  'Voto em Separado'?: number;
 
   @IsString()
-  tipo: string;
+  'Tipo': string;
+}
+
+function parseCustom(value: string): number {
+  const cleanValue = value.replace(/\./g, '');
+
+  const parsed = parseInt(cleanValue, 10);
+
+  if (isNaN(parsed)) {
+    return 0;
+  }
+
+  return parsed;
 }

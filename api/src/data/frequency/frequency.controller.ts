@@ -31,6 +31,11 @@ export class FrequencyController {
     return this.frequencyService.findOne(id);
   }
 
+  @Get('latest')
+  async findLatest(): Promise<Frequency> {
+    return this.frequencyService.findLatest();
+  }
+
   @Patch(':id')
   update(
     @Param('id') id: number,

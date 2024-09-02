@@ -13,7 +13,12 @@ export class FrequencyService {
   ) {}
 
   create(createFrequencyDto: CreateFrequencyDto): Promise<Frequency> {
-    const frequency = this.frequencyRepository.create(createFrequencyDto);
+    const frequency = this.frequencyRepository.create({
+      numeroSessao: createFrequencyDto.pre_ses_numero,
+      anoSessao: createFrequencyDto.pre_ses_ano,
+      nomeVereador: createFrequencyDto.cad_cad_nome_abreviado,
+      statusPresenca: createFrequencyDto.pre_pre_presente,
+    });
     return this.frequencyRepository.save(frequency);
   }
 
@@ -39,8 +44,15 @@ export class FrequencyService {
     id: number,
     updateFrequencyDto: UpdateFrequencyDto,
   ): Promise<Frequency> {
+    const frequency = {
+      numeroSessao: updateFrequencyDto.pre_ses_numero,
+      anoSessao: updateFrequencyDto.pre_ses_ano,
+      nomeVereador: updateFrequencyDto.cad_cad_nome_abreviado,
+      statusPresenca: updateFrequencyDto.pre_pre_presente,
+    };
     await this.findOne(id); // Check if the entity exists
-    await this.frequencyRepository.update(id, updateFrequencyDto);
+
+    await this.frequencyRepository.update(id, frequency);
     return this.findOne(id); // Return the updated entity
   }
 
@@ -49,5 +61,14 @@ export class FrequencyService {
     if (result.affected === 0) {
       throw new NotFoundException(`Frequency with ID ${id} not found`);
     }
+  }
+
+  async findLatest(): Promise<Frequency> {
+    return this.frequencyRepository.findOne({
+      order: {
+        anoSessao: 'DESC',
+        numeroSessao: 'DESC',
+      },
+    });
   }
 }

@@ -13,9 +13,20 @@ export class GeneralProductivityService {
   ) {}
 
   create(createGeneralProductivityDto: CreateGeneralProductivityDto) {
-    const generalProductivity = this.generalProductivityRepository.create(
-      createGeneralProductivityDto,
-    );
+    const generalProductivity = this.generalProductivityRepository.create({
+      ano: createGeneralProductivityDto['Ano'],
+      parlamentarAutor: createGeneralProductivityDto['Parlamentar/Autor'],
+      emenda: createGeneralProductivityDto['Emenda'],
+      mensagem: createGeneralProductivityDto['Mensagem'],
+      parecer: createGeneralProductivityDto['Parecer'],
+      relatoria: createGeneralProductivityDto['Relatoria'],
+      substitutivo: createGeneralProductivityDto['Substitutivo'],
+      vistas: createGeneralProductivityDto['Vistas'],
+      votoRelator: createGeneralProductivityDto['Voto do Relator'],
+      votoSeparado: createGeneralProductivityDto['Voto em Separado'],
+      total: createGeneralProductivityDto['Total'],
+      tipo: createGeneralProductivityDto['Tipo'],
+    });
     return this.generalProductivityRepository.save(generalProductivity);
   }
 
@@ -31,10 +42,22 @@ export class GeneralProductivityService {
     id: number,
     updateGeneralProductivityDto: UpdateGeneralProductivityDto,
   ) {
-    return this.generalProductivityRepository.update(
-      id,
-      updateGeneralProductivityDto,
-    );
+    const generalProductivity = this.generalProductivityRepository.create({
+      ano: updateGeneralProductivityDto['Ano'],
+      parlamentarAutor: updateGeneralProductivityDto['Parlamentar/Autor'],
+      emenda: updateGeneralProductivityDto['Emenda'],
+      mensagem: updateGeneralProductivityDto['Mensagem'],
+      parecer: updateGeneralProductivityDto['Parecer'],
+      relatoria: updateGeneralProductivityDto['Relatoria'],
+      substitutivo: updateGeneralProductivityDto['Substitutivo'],
+      vistas: updateGeneralProductivityDto['Vistas'],
+      votoRelator: updateGeneralProductivityDto['Voto do Relator'],
+      votoSeparado: updateGeneralProductivityDto['Voto em Separado'],
+      total: updateGeneralProductivityDto['Total'],
+      tipo: updateGeneralProductivityDto['Tipo'],
+    });
+
+    return this.generalProductivityRepository.update(id, generalProductivity);
   }
 
   remove(id: number) {
