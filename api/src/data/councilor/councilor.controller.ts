@@ -13,7 +13,7 @@ import { CreateCouncilorDto } from './dto/create-councilor.dto';
 import { UpdateCouncilorDto } from './dto/update-councilor.dto';
 import { Councilor } from './entities/councilor.entity';
 
-@Controller('councilor')
+@Controller('councilors')
 export class CouncilorController {
   constructor(private readonly councilorService: CouncilorService) {}
 
@@ -32,6 +32,11 @@ export class CouncilorController {
     return this.councilorService.findOne(+id);
   }
 
+  @Get('search')
+  async findByName(@Query('nome') nome: string): Promise<Councilor[]> {
+    return this.councilorService.findByName(nome);
+  }
+
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -43,10 +48,5 @@ export class CouncilorController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.councilorService.remove(+id);
-  }
-
-  @Get()
-  async findByName(@Query('nome') nome: string): Promise<Councilor[]> {
-    return this.councilorService.findByName(nome);
   }
 }

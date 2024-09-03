@@ -28,9 +28,9 @@ export class CreateCouncilorDto {
 
   @IsOptional()
   @IsString()
-  email?: string;
+  'e-mail'?: string;
 
   @IsOptional()
   @IsString()
-  endereço_de_gabinete?: string;
+  'endereço_de_gabinete'?: string;
 }

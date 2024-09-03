@@ -1,36 +1,34 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Like, Repository } from 'typeorm';
 import { CreateCouncilorDto } from './dto/create-councilor.dto';
 import { UpdateCouncilorDto } from './dto/update-councilor.dto';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { Councilor } from './entities/councilor.entity';
 
 @Injectable()
 export class CouncilorService {
   constructor(
     @InjectRepository(Councilor)
-    private councilorRepository: Repository<Councilor>,
+    private readonly councilorRepository: Repository<Councilor>,
   ) {}
 
   async create(createCouncilorDto: CreateCouncilorDto): Promise<Councilor> {
-    const councilor = this.councilorRepository.create(createCouncilorDto);
-    // nome: string;
-    // partido: string;
-    // descricao: string;
-    // linkFoto: string;
-    // emAtividade: boolean;
-    // nascimento: string;
-    // telefone: string;
-    // email: string;
-    // enderecoDeGabinete: string;
-    // const councilor = this.councilorRepository.create({
-    //   nome: createCouncilorDto.nome,
-    //   partido: createCouncilorDto.partido,
-    //   descricao: createCouncilorDto.descricao,
-    //   linkFoto: createCouncilorDto.linkFoto,
-    //   emAtividade: createCouncilorDto.emAtividade,
-    //   nascimento: createCouncilorDto.nascimento
-    // });
+    const {
+      nascimento,
+      telefone,
+      'e-mail': email,
+      endereço_de_gabinete: enderecoDeGabinete,
+      ...rest
+    } = createCouncilorDto;
+
+    const councilor = this.councilorRepository.create({
+      ...rest,
+      nascimento,
+      telefone,
+      email,
+      enderecoDeGabinete,
+    });
+
     return this.councilorRepository.save(councilor);
   }
 
@@ -39,28 +37,48 @@ export class CouncilorService {
   }
 
   async findOne(id: number): Promise<Councilor> {
-    return this.councilorRepository.findOne({
-      where: {
-        id: id,
-      },
-    });
-  }
-
-  async findByName(nome: string): Promise<Councilor[]> {
-    return this.councilorRepository.find({
-      where: { nome: nome },
-    });
+    const councilor = await this.councilorRepository.findOneBy({ id });
+    if (!councilor) {
+      throw new NotFoundException(`Councilor with ID ${id} not found`);
+    }
+    return councilor;
   }
 
   async update(
     id: number,
     updateCouncilorDto: UpdateCouncilorDto,
   ): Promise<Councilor> {
-    await this.councilorRepository.update(id, updateCouncilorDto);
+    const {
+      nascimento,
+      telefone,
+      'e-mail': email,
+      endereço_de_gabinete: enderecoDeGabinete,
+      ...rest
+    } = updateCouncilorDto;
+
+    await this.councilorRepository.update(id, {
+      ...rest,
+      nascimento,
+      telefone,
+      email,
+      enderecoDeGabinete,
+    });
+
     return this.findOne(id);
   }
 
   async remove(id: number): Promise<void> {
-    await this.councilorRepository.delete(id);
+    const result = await this.councilorRepository.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException(`Councilor with ID ${id} not found`);
+    }
+  }
+
+  async findByName(nome: string): Promise<Councilor[]> {
+    return this.councilorRepository.find({
+      where: {
+        nome: Like(`%${nome}%`),
+      },
+    });
   }
 }
