@@ -12,17 +12,26 @@ export class TravelExpensesService {
     private readonly travelExpensesRepository: Repository<TravelExpense>,
   ) {}
 
-  create(
+  async create(
     createTravelExpenseDto: CreateTravelExpenseDto,
   ): Promise<TravelExpense> {
-    const travelExpense = this.travelExpensesRepository.create(
-      createTravelExpenseDto,
-    );
+    const travelExpense = this.travelExpensesRepository.create({
+      ...createTravelExpenseDto,
+      data: new Date(
+        createTravelExpenseDto.data.split('/').reverse().join('-'),
+      ),
+    });
     return this.travelExpensesRepository.save(travelExpense);
   }
 
-  findAll(): Promise<TravelExpense[]> {
+  async findAll(): Promise<TravelExpense[]> {
     return this.travelExpensesRepository.find();
+  }
+
+  async findLatest(): Promise<TravelExpense> {
+    return this.travelExpensesRepository.findOne({
+      order: { data: 'DESC' },
+    });
   }
 
   async findOne(id: number): Promise<TravelExpense> {
@@ -37,7 +46,14 @@ export class TravelExpensesService {
     id: number,
     updateTravelExpenseDto: UpdateTravelExpenseDto,
   ): Promise<TravelExpense> {
-    await this.travelExpensesRepository.update(id, updateTravelExpenseDto);
+    const updatedData = {
+      ...updateTravelExpenseDto,
+      data: new Date(
+        updateTravelExpenseDto.data.split('/').reverse().join('-'),
+      ),
+    };
+
+    await this.travelExpensesRepository.update(id, updatedData);
     return this.findOne(id);
   }
 

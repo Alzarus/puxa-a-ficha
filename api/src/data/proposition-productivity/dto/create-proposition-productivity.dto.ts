@@ -1,63 +1,90 @@
 import { IsInt, IsString, IsOptional } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreatePropositionProductivityDto {
+  @Transform(({ value }) => parseCustom(value))
   @IsInt()
-  ano: number;
+  'Ano': number;
 
   @IsString()
-  parlamentarAutor: string;
+  'Parlamentar/Autor': string;
 
   @IsOptional()
+  @Transform(({ value }) => parseCustom(value))
   @IsInt()
-  mocao?: number;
+  'MOC'?: number;
 
   @IsOptional()
+  @Transform(({ value }) => parseCustom(value))
   @IsInt()
-  projetoDecretoLegislativo?: number;
+  'PDL'?: number;
 
   @IsOptional()
+  @Transform(({ value }) => parseCustom(value))
   @IsInt()
-  projetoEmendaLOM?: number;
+  'PEL'?: number;
 
   @IsOptional()
+  @Transform(({ value }) => parseCustom(value))
   @IsInt()
-  projetoIndicacao?: number;
+  'PIN'?: number;
 
   @IsOptional()
+  @Transform(({ value }) => parseCustom(value))
   @IsInt()
-  projetoLei?: number;
+  'PLC'?: number;
 
   @IsOptional()
+  @Transform(({ value }) => parseCustom(value))
   @IsInt()
-  projetoLeiComplementar?: number;
+  'PLE'?: number;
 
   @IsOptional()
+  @Transform(({ value }) => parseCustom(value))
   @IsInt()
-  projetoResolucao?: number;
+  'PRE'?: number;
 
   @IsOptional()
+  @Transform(({ value }) => parseCustom(value))
   @IsInt()
-  requerimentoAdministrativo?: number;
+  'RAD'?: number;
 
   @IsOptional()
+  @Transform(({ value }) => parseCustom(value))
   @IsInt()
-  requerimentoUrgenciaUrgentissima?: number;
+  'RUU'?: number;
 
   @IsOptional()
+  @Transform(({ value }) => parseCustom(value))
   @IsInt()
-  requerimentoUtilidadePublica?: number;
+  'REP'?: number;
 
   @IsOptional()
+  @Transform(({ value }) => parseCustom(value))
   @IsInt()
-  requerimentoEspecial?: number;
+  'RUP'?: number;
 
   @IsOptional()
+  @Transform(({ value }) => parseCustom(value))
   @IsInt()
-  veto?: number;
+  'VTO'?: number;
 
+  @Transform(({ value }) => parseCustom(value))
   @IsInt()
-  total: number;
+  'Total': number;
 
   @IsString()
-  tipo: string;
+  'Tipo': string;
+}
+
+function parseCustom(value: string): number {
+  const cleanValue = value.replace(/\./g, '');
+
+  const parsed = parseInt(cleanValue, 10);
+
+  if (isNaN(parsed)) {
+    return 0;
+  }
+
+  return parsed;
 }

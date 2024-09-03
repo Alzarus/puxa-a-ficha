@@ -10,6 +10,7 @@ import {
 import { PropositionProductivityService } from './proposition-productivity.service';
 import { CreatePropositionProductivityDto } from './dto/create-proposition-productivity.dto';
 import { UpdatePropositionProductivityDto } from './dto/update-proposition-productivity.dto';
+import { PropositionProductivity } from './entities/proposition-productivity.entity';
 
 @Controller('proposition-productivity')
 export class PropositionProductivityController {
@@ -27,7 +28,7 @@ export class PropositionProductivityController {
   }
 
   @Get()
-  findAll() {
+  async findAll(): Promise<PropositionProductivity[]> {
     return this.propositionProductivityService.findAll();
   }
 

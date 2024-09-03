@@ -8,17 +8,17 @@ export class CreatePropositionDto {
   autorproposicao: string;
 
   @IsString()
-  proEmenta: string;
+  pro_ementa: string;
 
   @IsString()
-  dataMovimentacao: string;
+  tra_dt_movimentacao: string;
 
   @IsString()
   destino: string;
 
   @IsString()
-  situacaoFutura: string;
+  sit_nome_futuro: string;
 
   @IsString()
-  autorDocumento: string;
+  autordoc: string;
 }

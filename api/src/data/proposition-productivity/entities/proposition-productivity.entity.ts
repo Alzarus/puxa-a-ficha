@@ -24,10 +24,10 @@ export class PropositionProductivity {
   projetoIndicacao: number;
 
   @Column({ type: 'int', nullable: true })
-  projetoLei: number;
+  projetoLeiComplementar: number;
 
   @Column({ type: 'int', nullable: true })
-  projetoLeiComplementar: number;
+  projetoLei: number;
 
   @Column({ type: 'int', nullable: true })
   projetoResolucao: number;

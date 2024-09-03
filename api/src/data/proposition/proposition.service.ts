@@ -13,7 +13,15 @@ export class PropositionService {
   ) {}
 
   create(createPropositionDto: CreatePropositionDto): Promise<Proposition> {
-    const proposition = this.propositionRepository.create(createPropositionDto);
+    const proposition = this.propositionRepository.create({
+      proposicao: createPropositionDto.proposicao,
+      autorProposicao: createPropositionDto.autorproposicao,
+      ementa: createPropositionDto.pro_ementa,
+      dataMovimentacao: createPropositionDto.tra_dt_movimentacao,
+      destino: createPropositionDto.destino,
+      situacaoFutura: createPropositionDto.sit_nome_futuro,
+      autorDocumento: createPropositionDto.autordoc,
+    });
     return this.propositionRepository.save(proposition);
   }
 
@@ -27,11 +35,27 @@ export class PropositionService {
     });
   }
 
+  async findLatest(): Promise<Proposition> {
+    return this.propositionRepository.findOne({
+      order: { dataMovimentacao: 'DESC' },
+    });
+  }
+
   async update(
     id: number,
     updatePropositionDto: UpdatePropositionDto,
   ): Promise<Proposition> {
-    await this.propositionRepository.update(id, updatePropositionDto);
+    const proposition = this.propositionRepository.create({
+      proposicao: updatePropositionDto.proposicao,
+      autorProposicao: updatePropositionDto.autorproposicao,
+      ementa: updatePropositionDto.pro_ementa,
+      dataMovimentacao: updatePropositionDto.tra_dt_movimentacao,
+      destino: updatePropositionDto.destino,
+      situacaoFutura: updatePropositionDto.sit_nome_futuro,
+      autorDocumento: updatePropositionDto.autordoc,
+    });
+
+    await this.propositionRepository.update(id, proposition);
     return this.findOne(id);
   }
 

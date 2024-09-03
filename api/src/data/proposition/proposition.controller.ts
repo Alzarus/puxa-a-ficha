@@ -10,6 +10,7 @@ import {
 import { PropositionService } from './proposition.service';
 import { CreatePropositionDto } from './dto/create-proposition.dto';
 import { UpdatePropositionDto } from './dto/update-proposition.dto';
+import { Proposition } from './entities/proposition.entity';
 
 @Controller('propositions')
 export class PropositionController {
@@ -28,6 +29,11 @@ export class PropositionController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.propositionService.findOne(+id);
+  }
+
+  @Get('latest')
+  async findLatest(): Promise<Proposition> {
+    return this.propositionService.findLatest();
   }
 
   @Patch(':id')

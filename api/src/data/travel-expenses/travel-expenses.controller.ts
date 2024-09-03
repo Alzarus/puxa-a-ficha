@@ -10,6 +10,7 @@ import {
 import { TravelExpensesService } from './travel-expenses.service';
 import { CreateTravelExpenseDto } from './dto/create-travel-expense.dto';
 import { UpdateTravelExpenseDto } from './dto/update-travel-expense.dto';
+import { TravelExpense } from './entities/travel-expense.entity';
 
 @Controller('travel-expenses')
 export class TravelExpensesController {
@@ -28,6 +29,11 @@ export class TravelExpensesController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.travelExpensesService.findOne(+id);
+  }
+
+  @Get('latest')
+  findLatest(): Promise<TravelExpense> {
+    return this.travelExpensesService.findLatest();
   }
 
   @Patch(':id')

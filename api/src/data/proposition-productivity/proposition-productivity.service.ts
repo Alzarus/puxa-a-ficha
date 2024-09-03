@@ -16,9 +16,25 @@ export class PropositionProductivityService {
     createPropositionProductivityDto: CreatePropositionProductivityDto,
   ): Promise<PropositionProductivity> {
     const propositionProductivity =
-      this.propositionProductivityRepository.create(
-        createPropositionProductivityDto,
-      );
+      this.propositionProductivityRepository.create({
+        ano: createPropositionProductivityDto['Ano'],
+        parlamentarAutor: createPropositionProductivityDto['Parlamentar/Autor'],
+        mocao: createPropositionProductivityDto['MOC'],
+        projetoDecretoLegislativo: createPropositionProductivityDto['PDL'],
+        projetoEmendaLOM: createPropositionProductivityDto['PEL'],
+        projetoIndicacao: createPropositionProductivityDto['PIN'],
+        projetoLeiComplementar: createPropositionProductivityDto['PLC'],
+        projetoLei: createPropositionProductivityDto['PLE'],
+        projetoResolucao: createPropositionProductivityDto['PRE'],
+        requerimentoAdministrativo: createPropositionProductivityDto['RAD'],
+        requerimentoUrgenciaUrgentissima:
+          createPropositionProductivityDto['RUU'],
+        requerimentoUtilidadePublica: createPropositionProductivityDto['RUP'],
+        requerimentoEspecial: createPropositionProductivityDto['REP'],
+        veto: createPropositionProductivityDto['VTO'],
+        total: createPropositionProductivityDto['Total'],
+        tipo: createPropositionProductivityDto['Tipo'],
+      });
     return this.propositionProductivityRepository.save(propositionProductivity);
   }
 
@@ -41,9 +57,30 @@ export class PropositionProductivityService {
     id: number,
     updatePropositionProductivityDto: UpdatePropositionProductivityDto,
   ): Promise<PropositionProductivity> {
+    const propositionProductivity =
+      this.propositionProductivityRepository.create({
+        ano: updatePropositionProductivityDto['Ano'],
+        parlamentarAutor: updatePropositionProductivityDto['Parlamentar/Autor'],
+        mocao: updatePropositionProductivityDto['MOC'],
+        projetoDecretoLegislativo: updatePropositionProductivityDto['PDL'],
+        projetoEmendaLOM: updatePropositionProductivityDto['PEL'],
+        projetoIndicacao: updatePropositionProductivityDto['PIN'],
+        projetoLeiComplementar: updatePropositionProductivityDto['PLC'],
+        projetoLei: updatePropositionProductivityDto['PLE'],
+        projetoResolucao: updatePropositionProductivityDto['PRE'],
+        requerimentoAdministrativo: updatePropositionProductivityDto['RAD'],
+        requerimentoUrgenciaUrgentissima:
+          updatePropositionProductivityDto['RUU'],
+        requerimentoUtilidadePublica: updatePropositionProductivityDto['RUP'],
+        requerimentoEspecial: updatePropositionProductivityDto['REP'],
+        veto: updatePropositionProductivityDto['VTO'],
+        total: updatePropositionProductivityDto['Total'],
+        tipo: updatePropositionProductivityDto['Tipo'],
+      });
+
     await this.propositionProductivityRepository.update(
       id,
-      updatePropositionProductivityDto,
+      propositionProductivity,
     );
     return this.findOne(id);
   }
