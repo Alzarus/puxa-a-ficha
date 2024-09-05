@@ -16,7 +16,12 @@ export class ContractController {
   constructor(private readonly contractService: ContractService) {}
 
   @Post()
-  create(@Body() createContractDto: CreateContractDto) {
+  async create(
+    @Body() createContractDto: CreateContractDto | CreateContractDto[],
+  ) {
+    if (Array.isArray(createContractDto)) {
+      return this.contractService.createMany(createContractDto);
+    }
     return this.contractService.create(createContractDto);
   }
 
@@ -31,11 +36,16 @@ export class ContractController {
   }
 
   @Patch(':id')
-  update(
+  async update(
     @Param('id') id: number,
     @Body() updateContractDto: UpdateContractDto,
   ) {
     return this.contractService.update(id, updateContractDto);
+  }
+
+  @Patch()
+  async updateMany(@Body() updateContractDto: UpdateContractDto[]) {
+    return this.contractService.updateMany(updateContractDto);
   }
 
   @Delete(':id')
