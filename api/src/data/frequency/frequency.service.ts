@@ -12,31 +12,33 @@ export class FrequencyService {
     private readonly frequencyRepository: Repository<Frequency>,
   ) {}
 
-  create(createFrequencyDto: CreateFrequencyDto): Promise<Frequency> {
-    const frequency = this.frequencyRepository.create({
-      numeroSessao: createFrequencyDto.pre_ses_numero,
-      anoSessao: createFrequencyDto.pre_ses_ano,
-      nomeVereador: createFrequencyDto.cad_cad_nome_abreviado,
-      statusPresenca: createFrequencyDto.pre_pre_presente,
-    });
+  async create(createFrequencyDto: CreateFrequencyDto): Promise<Frequency> {
+    const frequency = this.frequencyRepository.create(createFrequencyDto);
     return this.frequencyRepository.save(frequency);
   }
 
-  findAll(): Promise<Frequency[]> {
+  async createMany(
+    createFrequencyDtos: CreateFrequencyDto[],
+  ): Promise<Frequency[]> {
+    const frequencies = this.frequencyRepository.create(createFrequencyDtos);
+    return this.frequencyRepository.save(frequencies);
+  }
+
+  async findAll(): Promise<Frequency[]> {
     return this.frequencyRepository.find();
   }
 
-  async findOne(id: number): Promise<Frequency> {
-    const frequency = await this.frequencyRepository.findOne({
-      where: {
-        id: id,
-      },
+  async findLatest(): Promise<Frequency> {
+    return this.frequencyRepository.findOne({
+      order: { anoSessao: 'DESC', numeroSessao: 'DESC' },
     });
+  }
 
+  async findOne(id: number): Promise<Frequency> {
+    const frequency = await this.frequencyRepository.findOneBy({ id });
     if (!frequency) {
       throw new NotFoundException(`Frequency with ID ${id} not found`);
     }
-
     return frequency;
   }
 
@@ -44,31 +46,11 @@ export class FrequencyService {
     id: number,
     updateFrequencyDto: UpdateFrequencyDto,
   ): Promise<Frequency> {
-    const frequency = {
-      numeroSessao: updateFrequencyDto.pre_ses_numero,
-      anoSessao: updateFrequencyDto.pre_ses_ano,
-      nomeVereador: updateFrequencyDto.cad_cad_nome_abreviado,
-      statusPresenca: updateFrequencyDto.pre_pre_presente,
-    };
-    await this.findOne(id); // Check if the entity exists
-
-    await this.frequencyRepository.update(id, frequency);
-    return this.findOne(id); // Return the updated entity
+    await this.frequencyRepository.update(id, updateFrequencyDto);
+    return this.findOne(id);
   }
 
   async remove(id: number): Promise<void> {
-    const result = await this.frequencyRepository.delete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException(`Frequency with ID ${id} not found`);
-    }
-  }
-
-  async findLatest(): Promise<Frequency> {
-    return this.frequencyRepository.findOne({
-      order: {
-        anoSessao: 'DESC',
-        numeroSessao: 'DESC',
-      },
-    });
+    await this.frequencyRepository.delete(id);
   }
 }

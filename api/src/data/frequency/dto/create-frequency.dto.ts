@@ -2,14 +2,14 @@ import { IsString } from 'class-validator';
 
 export class CreateFrequencyDto {
   @IsString()
-  pre_ses_numero: string;
+  numeroSessao: string;
 
   @IsString()
-  pre_ses_ano: string;
+  anoSessao: string;
 
   @IsString()
-  cad_cad_nome_abreviado: string;
+  nomeAbreviado: string;
 
   @IsString()
-  pre_pre_presente: string;
+  statusPresenca: string;
 }

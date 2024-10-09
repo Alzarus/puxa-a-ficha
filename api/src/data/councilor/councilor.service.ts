@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Like, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
+import { Councilor } from './entities/councilor.entity';
 import { CreateCouncilorDto } from './dto/create-councilor.dto';
 import { UpdateCouncilorDto } from './dto/update-councilor.dto';
-import { Councilor } from './entities/councilor.entity';
 
 @Injectable()
 export class CouncilorService {
@@ -14,25 +14,39 @@ export class CouncilorService {
 
   async create(createCouncilorDto: CreateCouncilorDto): Promise<Councilor> {
     const {
-      nascimento,
-      telefone,
-      'e-mail': email,
-      endereço_de_gabinete: enderecoDeGabinete,
+      extras: { nascimento, telefone, email, endereço_de_gabinete },
       ...rest
     } = createCouncilorDto;
-
     const councilor = this.councilorRepository.create({
       ...rest,
       nascimento,
       telefone,
       email,
-      enderecoDeGabinete,
+      enderecoDeGabinete: endereço_de_gabinete,
     });
-
     return this.councilorRepository.save(councilor);
   }
 
-  async findAll(): Promise<Councilor[]> {
+  async createMany(
+    createCouncilorDtos: CreateCouncilorDto[],
+  ): Promise<Councilor[]> {
+    const councilors = createCouncilorDtos.map((dto) => {
+      const {
+        extras: { nascimento, telefone, email, endereço_de_gabinete },
+        ...rest
+      } = dto;
+      return this.councilorRepository.create({
+        ...rest,
+        nascimento,
+        telefone,
+        email,
+        enderecoDeGabinete: endereço_de_gabinete,
+      });
+    });
+    return this.councilorRepository.save(councilors);
+  }
+
+  findAll(): Promise<Councilor[]> {
     return this.councilorRepository.find();
   }
 
@@ -49,10 +63,7 @@ export class CouncilorService {
     updateCouncilorDto: UpdateCouncilorDto,
   ): Promise<Councilor> {
     const {
-      nascimento,
-      telefone,
-      'e-mail': email,
-      endereço_de_gabinete: enderecoDeGabinete,
+      extras: { nascimento, telefone, email, endereço_de_gabinete },
       ...rest
     } = updateCouncilorDto;
 
@@ -61,7 +72,7 @@ export class CouncilorService {
       nascimento,
       telefone,
       email,
-      enderecoDeGabinete,
+      enderecoDeGabinete: endereço_de_gabinete,
     });
 
     return this.findOne(id);
@@ -72,13 +83,5 @@ export class CouncilorService {
     if (result.affected === 0) {
       throw new NotFoundException(`Councilor with ID ${id} not found`);
     }
-  }
-
-  async findByName(nome: string): Promise<Councilor[]> {
-    return this.councilorRepository.find({
-      where: {
-        nome: Like(`%${nome}%`),
-      },
-    });
   }
 }

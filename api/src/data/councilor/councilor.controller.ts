@@ -11,15 +11,20 @@ import {
 import { CouncilorService } from './councilor.service';
 import { CreateCouncilorDto } from './dto/create-councilor.dto';
 import { UpdateCouncilorDto } from './dto/update-councilor.dto';
-import { Councilor } from './entities/councilor.entity';
 
 @Controller('councilors')
 export class CouncilorController {
   constructor(private readonly councilorService: CouncilorService) {}
 
   @Post()
-  create(@Body() createCouncilorDto: CreateCouncilorDto) {
-    return this.councilorService.create(createCouncilorDto);
+  create(
+    @Body() createCouncilorDto: CreateCouncilorDto | CreateCouncilorDto[],
+  ) {
+    if (Array.isArray(createCouncilorDto)) {
+      return this.councilorService.createMany(createCouncilorDto);
+    } else {
+      return this.councilorService.create(createCouncilorDto);
+    }
   }
 
   @Get()
@@ -30,11 +35,6 @@ export class CouncilorController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.councilorService.findOne(+id);
-  }
-
-  @Get('search')
-  async findByName(@Query('nome') nome: string): Promise<Councilor[]> {
-    return this.councilorService.findByName(nome);
   }
 
   @Patch(':id')

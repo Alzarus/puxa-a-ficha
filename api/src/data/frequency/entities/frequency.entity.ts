@@ -5,15 +5,15 @@ export class Frequency {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ type: 'varchar', length: 255 })
   numeroSessao: string;
 
-  @Column()
+  @Column({ type: 'varchar', length: 255 })
   anoSessao: string;
 
-  @Column()
-  nomeVereador: string;
+  @Column({ type: 'varchar', length: 255 })
+  nomeAbreviado: string;
 
-  @Column()
+  @Column({ type: 'varchar', length: 100 })
   statusPresenca: string;
 }

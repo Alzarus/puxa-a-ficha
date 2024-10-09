@@ -1,4 +1,23 @@
 import { IsString, IsBoolean, IsOptional } from 'class-validator';
+import { Type } from 'class-transformer';
+
+class CouncilorExtrasDto {
+  @IsOptional()
+  @IsString()
+  nascimento?: string;
+
+  @IsOptional()
+  @IsString()
+  telefone?: string;
+
+  @IsOptional()
+  @IsString()
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  endereço_de_gabinete?: string;
+}
 
 export class CreateCouncilorDto {
   @IsString()
@@ -19,18 +38,6 @@ export class CreateCouncilorDto {
   emAtividade: boolean;
 
   @IsOptional()
-  @IsString()
-  nascimento?: string;
-
-  @IsOptional()
-  @IsString()
-  telefone?: string;
-
-  @IsOptional()
-  @IsString()
-  'e-mail'?: string;
-
-  @IsOptional()
-  @IsString()
-  'endereço_de_gabinete'?: string;
+  @Type(() => CouncilorExtrasDto)
+  extras?: CouncilorExtrasDto;
 }
