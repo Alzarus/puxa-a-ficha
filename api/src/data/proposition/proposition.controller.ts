@@ -17,8 +17,14 @@ export class PropositionController {
   constructor(private readonly propositionService: PropositionService) {}
 
   @Post()
-  create(@Body() createPropositionDto: CreatePropositionDto) {
-    return this.propositionService.create(createPropositionDto);
+  async create(
+    @Body() createPropositionDto: CreatePropositionDto | CreatePropositionDto[],
+  ) {
+    if (Array.isArray(createPropositionDto)) {
+      return this.propositionService.createMany(createPropositionDto);
+    } else {
+      return this.propositionService.create(createPropositionDto);
+    }
   }
 
   @Get()

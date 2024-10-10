@@ -59,12 +59,9 @@ export class CreateGeneralProductivityDto {
 
 function parseCustom(value: string): number {
   const cleanValue = value.replace(/\./g, '');
-
   const parsed = parseInt(cleanValue, 10);
-
   if (isNaN(parsed)) {
     return 0;
   }
-
   return parsed;
 }

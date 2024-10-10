@@ -1,18 +1,20 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { GeneralProductivity } from './entities/general-productivity.entity';
 import { CreateGeneralProductivityDto } from './dto/create-general-productivity.dto';
 import { UpdateGeneralProductivityDto } from './dto/update-general-productivity.dto';
-import { GeneralProductivity } from './entities/general-productivity.entity';
 
 @Injectable()
 export class GeneralProductivityService {
   constructor(
     @InjectRepository(GeneralProductivity)
-    private generalProductivityRepository: Repository<GeneralProductivity>,
+    private readonly generalProductivityRepository: Repository<GeneralProductivity>,
   ) {}
 
-  create(createGeneralProductivityDto: CreateGeneralProductivityDto) {
+  async create(
+    createGeneralProductivityDto: CreateGeneralProductivityDto,
+  ): Promise<GeneralProductivity> {
     const generalProductivity = this.generalProductivityRepository.create({
       ano: createGeneralProductivityDto['Ano'],
       parlamentarAutor: createGeneralProductivityDto['Parlamentar/Autor'],
@@ -30,19 +32,54 @@ export class GeneralProductivityService {
     return this.generalProductivityRepository.save(generalProductivity);
   }
 
-  findAll() {
+  async createMany(
+    createGeneralProductivityDtos: CreateGeneralProductivityDto[],
+  ): Promise<GeneralProductivity[]> {
+    const generalProductivities = createGeneralProductivityDtos.map((dto) => {
+      return this.generalProductivityRepository.create({
+        ano: dto['Ano'],
+        parlamentarAutor: dto['Parlamentar/Autor'],
+        emenda: dto['Emenda'],
+        mensagem: dto['Mensagem'],
+        parecer: dto['Parecer'],
+        relatoria: dto['Relatoria'],
+        substitutivo: dto['Substitutivo'],
+        vistas: dto['Vistas'],
+        votoRelator: dto['Voto do Relator'],
+        votoSeparado: dto['Voto em Separado'],
+        total: dto['Total'],
+        tipo: dto['Tipo'],
+      });
+    });
+    return this.generalProductivityRepository.save(generalProductivities);
+  }
+
+  async findAll(): Promise<GeneralProductivity[]> {
     return this.generalProductivityRepository.find();
   }
 
-  findOne(id: number) {
-    return this.generalProductivityRepository.findOneBy({ id });
+  async findLatest(): Promise<GeneralProductivity> {
+    return this.generalProductivityRepository.findOne({
+      order: { ano: 'DESC' },
+    });
   }
 
-  update(
+  async findOne(id: number): Promise<GeneralProductivity> {
+    const generalProductivity =
+      await this.generalProductivityRepository.findOneBy({ id });
+    if (!generalProductivity) {
+      throw new NotFoundException(
+        `GeneralProductivity with ID ${id} not found`,
+      );
+    }
+    return generalProductivity;
+  }
+
+  async update(
     id: number,
     updateGeneralProductivityDto: UpdateGeneralProductivityDto,
-  ) {
-    const generalProductivity = this.generalProductivityRepository.create({
+  ): Promise<GeneralProductivity> {
+    const updatedData = {
       ano: updateGeneralProductivityDto['Ano'],
       parlamentarAutor: updateGeneralProductivityDto['Parlamentar/Autor'],
       emenda: updateGeneralProductivityDto['Emenda'],
@@ -55,12 +92,13 @@ export class GeneralProductivityService {
       votoSeparado: updateGeneralProductivityDto['Voto em Separado'],
       total: updateGeneralProductivityDto['Total'],
       tipo: updateGeneralProductivityDto['Tipo'],
-    });
+    };
 
-    return this.generalProductivityRepository.update(id, generalProductivity);
+    await this.generalProductivityRepository.update(id, updatedData);
+    return this.findOne(id);
   }
 
-  remove(id: number) {
-    return this.generalProductivityRepository.delete(id);
+  async remove(id: number): Promise<void> {
+    await this.generalProductivityRepository.delete(id);
   }
 }

@@ -18,13 +18,24 @@ export class GeneralProductivityController {
   ) {}
 
   @Post()
-  create(@Body() createGeneralProductivityDto: CreateGeneralProductivityDto) {
-    return this.generalProductivityService.create(createGeneralProductivityDto);
+  async create(
+    @Body() data: CreateGeneralProductivityDto | CreateGeneralProductivityDto[],
+  ) {
+    if (Array.isArray(data)) {
+      return this.generalProductivityService.createMany(data);
+    } else {
+      return this.generalProductivityService.create(data);
+    }
   }
 
   @Get()
   findAll() {
     return this.generalProductivityService.findAll();
+  }
+
+  @Get('latest')
+  findLatest() {
+    return this.generalProductivityService.findLatest();
   }
 
   @Get(':id')
