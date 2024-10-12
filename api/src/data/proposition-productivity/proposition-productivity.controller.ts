@@ -19,17 +19,31 @@ export class PropositionProductivityController {
   ) {}
 
   @Post()
-  create(
-    @Body() createPropositionProductivityDto: CreatePropositionProductivityDto,
+  async create(
+    @Body()
+    createPropositionProductivityDto:
+      | CreatePropositionProductivityDto
+      | CreatePropositionProductivityDto[],
   ) {
-    return this.propositionProductivityService.create(
-      createPropositionProductivityDto,
-    );
+    if (Array.isArray(createPropositionProductivityDto)) {
+      return this.propositionProductivityService.createMany(
+        createPropositionProductivityDto,
+      );
+    } else {
+      return this.propositionProductivityService.create(
+        createPropositionProductivityDto,
+      );
+    }
   }
 
   @Get()
-  async findAll(): Promise<PropositionProductivity[]> {
+  findAll() {
     return this.propositionProductivityService.findAll();
+  }
+
+  @Get('latest')
+  async findLatest(): Promise<PropositionProductivity> {
+    return this.propositionProductivityService.findLatest();
   }
 
   @Get(':id')

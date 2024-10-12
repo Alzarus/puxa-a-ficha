@@ -1,7 +1,9 @@
 import { IsString, IsNumber, IsDateString } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateTravelExpenseDto {
   @IsDateString()
+  @Transform(({ value }) => value.split('/').reverse().join('-'))
   data: string;
 
   @IsString()
@@ -10,6 +12,7 @@ export class CreateTravelExpenseDto {
   @IsString()
   usuario: string;
 
+  @Transform(({ value }) => parseFloat(value))
   @IsNumber()
   valor: number;
 

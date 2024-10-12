@@ -38,6 +38,35 @@ export class PropositionProductivityService {
     return this.propositionProductivityRepository.save(propositionProductivity);
   }
 
+  async createMany(
+    createPropositionProductivityDtos: CreatePropositionProductivityDto[],
+  ): Promise<PropositionProductivity[]> {
+    const propositionProductivities = createPropositionProductivityDtos.map(
+      (dto) =>
+        this.propositionProductivityRepository.create({
+          ano: dto['Ano'],
+          parlamentarAutor: dto['Parlamentar/Autor'],
+          mocao: dto['MOC'],
+          projetoDecretoLegislativo: dto['PDL'],
+          projetoEmendaLOM: dto['PEL'],
+          projetoIndicacao: dto['PIN'],
+          projetoLeiComplementar: dto['PLC'],
+          projetoLei: dto['PLE'],
+          projetoResolucao: dto['PRE'],
+          requerimentoAdministrativo: dto['RAD'],
+          requerimentoUrgenciaUrgentissima: dto['RUU'],
+          requerimentoUtilidadePublica: dto['RUP'],
+          requerimentoEspecial: dto['REP'],
+          veto: dto['VTO'],
+          total: dto['Total'],
+          tipo: dto['Tipo'],
+        }),
+    );
+    return this.propositionProductivityRepository.save(
+      propositionProductivities,
+    );
+  }
+
   findAll(): Promise<PropositionProductivity[]> {
     return this.propositionProductivityRepository.find();
   }
@@ -92,5 +121,11 @@ export class PropositionProductivityService {
         `PropositionProductivity with ID ${id} not found`,
       );
     }
+  }
+
+  async findLatest(): Promise<PropositionProductivity> {
+    return this.propositionProductivityRepository.findOne({
+      order: { ano: 'DESC' },
+    });
   }
 }

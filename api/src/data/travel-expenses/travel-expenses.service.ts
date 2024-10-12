@@ -24,6 +24,18 @@ export class TravelExpensesService {
     return this.travelExpensesRepository.save(travelExpense);
   }
 
+  async createMany(
+    createTravelExpenseDtos: CreateTravelExpenseDto[],
+  ): Promise<TravelExpense[]> {
+    const travelExpenses = createTravelExpenseDtos.map((dto) =>
+      this.travelExpensesRepository.create({
+        ...dto,
+        data: new Date(dto.data.split('/').reverse().join('-')),
+      }),
+    );
+    return this.travelExpensesRepository.save(travelExpenses);
+  }
+
   async findAll(): Promise<TravelExpense[]> {
     return this.travelExpensesRepository.find();
   }

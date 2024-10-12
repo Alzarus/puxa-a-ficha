@@ -5,21 +5,21 @@ export class TravelExpense {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ type: 'timestamp' })
   data: Date;
 
-  @Column()
+  @Column({ type: 'varchar', length: 50 })
   tipo: string;
 
-  @Column()
+  @Column({ type: 'varchar', length: 100 })
   usuario: string;
 
-  @Column()
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
   valor: number;
 
-  @Column()
+  @Column({ type: 'varchar', length: 100 })
   localidade: string;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', nullable: true })
   justificativa: string;
 }

@@ -17,8 +17,15 @@ export class TravelExpensesController {
   constructor(private readonly travelExpensesService: TravelExpensesService) {}
 
   @Post()
-  create(@Body() createTravelExpenseDto: CreateTravelExpenseDto) {
-    return this.travelExpensesService.create(createTravelExpenseDto);
+  async create(
+    @Body()
+    createTravelExpenseDto: CreateTravelExpenseDto | CreateTravelExpenseDto[],
+  ) {
+    if (Array.isArray(createTravelExpenseDto)) {
+      return this.travelExpensesService.createMany(createTravelExpenseDto);
+    } else {
+      return this.travelExpensesService.create(createTravelExpenseDto);
+    }
   }
 
   @Get()
