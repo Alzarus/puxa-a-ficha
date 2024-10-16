@@ -34,7 +34,7 @@ export class TravelExpensesController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id') id: string | number) {
     return this.travelExpensesService.findOne(+id);
   }
 

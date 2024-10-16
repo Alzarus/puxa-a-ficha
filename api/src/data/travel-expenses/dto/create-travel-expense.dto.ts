@@ -3,7 +3,6 @@ import { Transform } from 'class-transformer';
 
 export class CreateTravelExpenseDto {
   @IsDateString()
-  @Transform(({ value }) => value.split('/').reverse().join('-'))
   data: string;
 
   @IsString()
