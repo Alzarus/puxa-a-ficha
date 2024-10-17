@@ -3,20 +3,17 @@ const path = require("path");
 const puppeteer = require("puppeteer");
 
 const DOWNLOAD_BUTTON_SELECTOR = ".scButton_default";
-const DOWNLOAD_FOLDER_PATH = path.join(__dirname, "../propositionFiles");
-const EXPECTED_FILENAME = "prop_interna.json";
+const DOWNLOAD_FOLDER_PATH = path.join(__dirname, "../contractFiles");
+const EXPECTED_FILENAME = "contrato.json";
 const EXPORT_BUTTON_SELECTOR = "#sc_btgp_btn_group_1_top";
-const LINK = "https://cmsalvador.sys.inf.br/cl/prop_interna/";
+const LINK = "https://cmsalvador.sys.inf.br/ca/contrato/";
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
-const INPUT_PATH = path.join(
-  __dirname,
-  "../propositionFiles/prop_interna.json"
-);
+const INPUT_PATH = path.join(__dirname, "../contractFiles/contrato.json");
 const SCRIPT_TIME_LABEL = "Script Time";
-const PATH_FILES_FOLDER = "./propositionFiles";
+const PATH_FILES_FOLDER = "./contractFiles";
 
-async function propositionDataJob() {
+async function contractDataJob() {
   try {
     console.time(SCRIPT_TIME_LABEL);
 
@@ -275,4 +272,4 @@ async function writeLog(receivedString) {
   console.log(string);
 }
 
-propositionDataJob();
+contractDataJob();

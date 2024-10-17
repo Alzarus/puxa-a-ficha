@@ -32,7 +32,7 @@ async function councilorDataJob() {
 
     await saveDataToJson(
       councilorInfoList,
-      await getFormattedPath("./councilorFiles/councilor_info.json")
+      await getFormattedPath("./councilorFiles/councilorInfo.json")
     );
 
     await browser.close();
@@ -217,9 +217,6 @@ async function fetchCouncilorData(page, url) {
   infoObject["descricao"] = await getCouncilorDescription(page);
   infoObject["linkFoto"] = `${MAIN_LINK}${await getBackgroundImageUrl(page)}`;
   infoObject["emAtividade"] = await getCouncilorActivityInfo(page);
-
-  // console.log(infoObject);
-  // console.log(infoObject.extras["e-mail"]);
 
   await saveCouncilorPhoto(page, infoObject);
 

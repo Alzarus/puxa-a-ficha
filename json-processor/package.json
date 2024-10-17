@@ -1,0 +1,15 @@
+{
+  "name": "puxa-a-ficha-json-processor",
+  "version": "1.0.0",
+  "description": "",
+  "author": "",
+  "private": true,
+  "license": "UNLICENSED",
+  "main": "process-json.js",
+  "scripts": {
+    "process-json": "node process-json.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.4"
+  }
+}

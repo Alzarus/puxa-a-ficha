@@ -1,0 +1,66 @@
+services:
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env.production
+
+  api:
+    build: ./api
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE}
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./api:/app
+    env_file:
+      - .env.production
+
+  crawlers:
+    build:
+      context: ./crawlers
+      dockerfile: Dockerfile
+    depends_on:
+      - api
+    volumes:
+      - ./crawlers:/app/crawlers
+      - /app/crawlers/node_modules
+      - /app/crawlers/.npm:/root/.npm
+    env_file:
+      - .env.production
+
+  json-processor:
+    build:
+      context: ./json-processor
+      dockerfile: Dockerfile
+    depends_on:
+      - crawlers
+      - api
+    volumes:
+      - ./json-processor:/app/json-processor
+      - /app/json-processor/node_modules
+    env_file:
+      - .env.production
+
+  # frontend:
+  #   build: ./frontend
+  #   ports:
+  #     - "80:80"
+  #   depends_on:
+  #     - api
+
+volumes:
+  db_data:

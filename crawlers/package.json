@@ -1,22 +1,30 @@
 {
-  "name": "puxa-a-ficha",
+  "name": "puxa-a-ficha-crawlers",
   "version": "1.0.0",
+  "description": "",
+  "author": "",
   "private": true,
+  "license": "UNLICENSED",
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
+    "start-contract": "lerna run start --scope contract-data-job",
     "start-councilor": "lerna run start --scope councilor-data-job",
     "start-frequency": "lerna run start --scope frequency-data-job",
     "start-general-productivity": "lerna run start --scope general-productivity-data-job",
     "start-proposition": "lerna run start --scope proposition-data-job",
-    "start-proposition-productivity": "lerna run start --scope proposition-productivity-data-job"
+    "start-proposition-productivity": "lerna run start --scope proposition-productivity-data-job",
+    "start-travel-expenses": "lerna run start --scope travel-expenses-data-job"
   },
   "dependencies": {
-    "puppeteer": "^21.0.3",
-    "playwright": "^1.35.0",
-    "xml2js": "^0.4.23",
     "fs": "0.0.1-security",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "playwright": "^1.35.0",
+    "puppeteer": "^21.0.3",
+    "xml2js": "^0.4.23"
+  },
+  "devDependencies": {
+    "lerna": "^8.1.7"
   }
 }
