@@ -1,10 +1,11 @@
-FROM node:18
+FROM node:18-slim
 
 WORKDIR /app/json-processor
 
 COPY package.json package-lock.json ./
 
-RUN npm install
+RUN npm ci && \
+    npm cache clean --force
 
 COPY . .
 

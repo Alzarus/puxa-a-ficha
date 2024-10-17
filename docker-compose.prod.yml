@@ -1,8 +1,3 @@
-version: "3.8"
-
-env_file:
-  - .env.production
-
 services:
   db:
     image: postgres:13
@@ -14,6 +9,8 @@ services:
       - db_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    env_file:
+      - .env.production
 
   api:
     build: ./api
@@ -29,6 +26,8 @@ services:
       - "3000:3000"
     volumes:
       - ./api:/app
+    env_file:
+      - .env.production
 
   crawlers:
     build:
@@ -38,22 +37,30 @@ services:
       - api
     volumes:
       - ./crawlers:/app/crawlers
+      - /app/crawlers/node_modules
+      - /app/crawlers/.npm:/root/.npm
+    env_file:
+      - .env.production
 
   json-processor:
-    build: ./json-processor
+    build:
+      context: ./json-processor
+      dockerfile: Dockerfile
     depends_on:
       - crawlers
       - api
     volumes:
-      - ./crawlers:/app/crawlers
-    command: npm run process-json
+      - ./json-processor:/app/json-processor
+      - /app/json-processor/node_modules
+    env_file:
+      - .env.production
 
-  frontend:
-    build: ./frontend
-    ports:
-      - "80:80"
-    depends_on:
-      - api
+  # frontend:
+  #   build: ./frontend
+  #   ports:
+  #     - "80:80"
+  #   depends_on:
+  #     - api
 
 volumes:
   db_data:

@@ -5,6 +5,6 @@ Créditos à Câmara Municipal de Salvador pela disponibilidade dos dados de tra
 
 nest g resource data/...
 
-docker-compose -f docker-compose.prod.yml up --build
-docker-compose down --remove-orphans
+docker-compose -f docker-compose.prod.yml up -d --build
+docker-compose -f docker-compose.prod.yml down --remove-orphans
 docker-compose logs -f
