@@ -14,3 +14,6 @@ npm run start-general-productivity >> /var/log/general-productivity.log 2>&1
 npm run start-proposition >> /var/log/proposition.log 2>&1
 npm run start-proposition-productivity >> /var/log/proposition-productivity.log 2>&1
 npm run start-travel-expenses >> /var/log/travel-expenses.log 2>&1
+
+echo "Crawlers concluídos, iniciando json-processor..."
+docker-compose run json-processor
