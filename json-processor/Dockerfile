@@ -13,14 +13,16 @@ COPY . .
 FROM node:18-slim AS production
 WORKDIR /app/json-processor
 
+# Instalação do curl e cron
+RUN apt-get update && \
+    apt-get install -y curl cron && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # Copiando o build e as dependências da etapa de build
 COPY --from=build /app/json-processor /app/json-processor
 
-# Instalando o cron e configurando a tarefa agendada
-RUN apt-get update && \
-    apt-get install -y cron && \
-    echo "30 0 * * * root npm run process-json >> /var/log/json-processor.log 2>&1" >> /etc/crontab && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+# Configurando o cron job
+RUN echo "30 0 * * * root npm run process-json >> /var/log/json-processor.log 2>&1" >> /etc/crontab
 
 # Executando o cron em primeiro plano
 CMD ["cron", "-f"]
