@@ -15,7 +15,7 @@ const directories = {
     "/app/crawlers/packages/travelExpensesDataJob/travelExpensesFiles",
 };
 
-const apiEndpoint = "http://localhost:3000";
+const apiEndpoint = "http://api:3000";
 
 async function processJsonFiles() {
   for (const [key, dir] of Object.entries(directories)) {

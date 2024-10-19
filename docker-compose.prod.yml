@@ -46,6 +46,7 @@ services:
       - ./crawlers:/app/crawlers
       - /app/crawlers/node_modules
       - /app/crawlers/.npm:/root/.npm
+      - shared_data:/app/crawlers # Volume compartilhado entre crawlers e json-processor
     env_file:
       - .env.production
 
