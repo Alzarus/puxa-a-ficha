@@ -11,6 +11,12 @@ services:
       - "5432:5432"
     env_file:
       - .env.production
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
   api:
     build: ./api
@@ -21,7 +27,8 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_DATABASE: ${DB_DATABASE}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     ports:
       - "3000:3000"
     volumes:
@@ -39,6 +46,7 @@ services:
       - ./crawlers:/app/crawlers
       - /app/crawlers/node_modules
       - /app/crawlers/.npm:/root/.npm
+      - shared_data:/app/crawlers # Volume compartilhado entre crawlers e json-processor
     env_file:
       - .env.production
 
@@ -51,16 +59,10 @@ services:
       - api
     volumes:
       - ./json-processor:/app/json-processor
-      - /app/json-processor/node_modules
+      - shared_data:/app/crawlers
     env_file:
       - .env.production
 
-  # frontend:
-  #   build: ./frontend
-  #   ports:
-  #     - "80:80"
-  #   depends_on:
-  #     - api
-
 volumes:
   db_data:
+  shared_data:

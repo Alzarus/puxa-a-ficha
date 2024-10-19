@@ -42,6 +42,7 @@ async function propositionProductivityDataJob() {
 async function initialConfigs() {
   const options = {
     headless: true,
+    executablePath: "/usr/bin/chromium-browser",
   };
 
   const browser = await playwright.chromium.launch(options);

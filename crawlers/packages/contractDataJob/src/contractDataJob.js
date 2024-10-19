@@ -69,6 +69,7 @@ async function initialConfigs() {
     args: myArgs,
     headless: "new",
     defaultViewport: null,
+    executablePath: "/usr/bin/google-chrome",
   };
 
   const browser = await puppeteer.launch(options);
