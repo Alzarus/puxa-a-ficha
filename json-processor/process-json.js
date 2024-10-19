@@ -3,16 +3,19 @@ const path = require("path");
 const axios = require("axios");
 
 const directories = {
-  contract: "/app/crawlers/contractFiles",
-  councilor: "/app/crawlers/councilorFiles",
-  frequency: "/app/crawlers/frequencyFiles",
-  generalProductivity: "/app/crawlers/generalProductivityFiles",
-  proposition: "/app/crawlers/propositionFiles",
-  propositionProductivity: "/app/crawlers/propositionProductivityFiles",
-  travelExpenses: "/app/crawlers/travelExpensesFiles",
+  contract: "/app/crawlers/packages/contractDataJob/contractFiles",
+  councilor: "/app/crawlers/packages/councilorDataJob/councilorFiles",
+  frequency: "/app/crawlers/packages/frequencyDataJob/frequencyFiles",
+  generalProductivity:
+    "/app/crawlers/packages/generalProductivityDataJob/generalProductivityFiles",
+  proposition: "/app/crawlers/packages/propositionDataJob/propositionFiles",
+  propositionProductivity:
+    "/app/crawlers/packages/propositionProductivityDataJob/propositionProductivityFiles",
+  travelExpenses:
+    "/app/crawlers/packages/travelExpensesDataJob/travelExpensesFiles",
 };
 
-const apiEndpoint = "http://api:3000";
+const apiEndpoint = "http://localhost:3000";
 
 async function processJsonFiles() {
   for (const [key, dir] of Object.entries(directories)) {

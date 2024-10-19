@@ -3,7 +3,7 @@ FROM node:18-slim AS build
 WORKDIR /app/crawlers
 
 # Copiando apenas os arquivos necessários para o build
-COPY package.json package-lock.json ./ 
+COPY package.json package-lock.json ./
 RUN npm ci --prefer-offline --cache /app/.npm && rm -rf /app/.npm
 
 # Copiando o código fonte
@@ -19,10 +19,14 @@ RUN apt-get update && \
     wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-chrome-keyring.gpg && \
     sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list' && \
     apt-get update && apt-get install -y google-chrome-stable --no-install-recommends && \
-    rm -rf /var/lib/apt/lists/* && \
-    npm install puppeteer@latest && \
-    npx puppeteer browsers install chrome && \
-    npx playwright install chromium --with-deps
+    rm -rf /var/lib/apt/lists/*
+
+# Instalar Puppeteer e Chrome para Puppeteer
+RUN npm install puppeteer@latest && \
+    npx puppeteer browsers install chrome
+
+# Instalar Playwright apenas com Chromium
+RUN npx playwright install chromium
 
 # Copiando o código e as dependências do build
 COPY --from=build /app/crawlers /app/crawlers
