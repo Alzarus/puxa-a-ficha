@@ -115,8 +115,14 @@ export class ContractService {
   }
 
   async findLatest(): Promise<Contract> {
-    return this.contractRepository.findOne({
+    const contract = await this.contractRepository.findOne({
       order: { data_publicacao: 'DESC' },
     });
+
+    if (!contract) {
+      throw new NotFoundException('No latest contract found');
+    }
+
+    return contract;
   }
 }

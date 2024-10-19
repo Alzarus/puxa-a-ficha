@@ -124,8 +124,15 @@ export class PropositionProductivityService {
   }
 
   async findLatest(): Promise<PropositionProductivity> {
-    return this.propositionProductivityRepository.findOne({
-      order: { ano: 'DESC' },
-    });
+    const propositionProductivity =
+      await this.propositionProductivityRepository.findOne({
+        order: { ano: 'DESC' },
+      });
+
+    if (!propositionProductivity) {
+      throw new NotFoundException('No latest proposition productivity found');
+    }
+
+    return propositionProductivity;
   }
 }

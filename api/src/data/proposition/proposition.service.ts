@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Proposition } from './entities/proposition.entity';
@@ -53,9 +53,15 @@ export class PropositionService {
   }
 
   async findLatest(): Promise<Proposition> {
-    return this.propositionRepository.findOne({
+    const proposition = await this.propositionRepository.findOne({
       order: { dataMovimentacao: 'DESC' },
     });
+
+    if (!proposition) {
+      throw new NotFoundException('No latest proposition found');
+    }
+
+    return proposition;
   }
 
   async update(

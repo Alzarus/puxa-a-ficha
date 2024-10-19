@@ -29,9 +29,15 @@ export class FrequencyService {
   }
 
   async findLatest(): Promise<Frequency> {
-    return this.frequencyRepository.findOne({
+    const frequency = await this.frequencyRepository.findOne({
       order: { anoSessao: 'DESC', numeroSessao: 'DESC' },
     });
+
+    if (!frequency) {
+      throw new NotFoundException('No latest frequency found');
+    }
+
+    return frequency;
   }
 
   async findOne(id: number): Promise<Frequency> {

@@ -41,9 +41,15 @@ export class TravelExpensesService {
   }
 
   async findLatest(): Promise<TravelExpense> {
-    return this.travelExpensesRepository.findOne({
+    const travelExpense = await this.travelExpensesRepository.findOne({
       order: { data: 'DESC' },
     });
+
+    if (!travelExpense) {
+      throw new NotFoundException('No latest travel expense found');
+    }
+
+    return travelExpense;
   }
 
   async findOne(id: number): Promise<TravelExpense> {
