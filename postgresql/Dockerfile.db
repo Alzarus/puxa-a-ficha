@@ -1,0 +1,14 @@
+FROM postgres:13
+
+# Receber os valores das variáveis como argumentos
+ARG POSTGRES_USER
+ARG POSTGRES_PASSWORD
+ARG POSTGRES_DB
+
+# Definir as variáveis de ambiente no container
+ENV POSTGRES_USER=$POSTGRES_USER
+ENV POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+ENV POSTGRES_DB=$POSTGRES_DB
+
+# Copiar scripts de inicialização para dentro do container
+COPY ./create-database.sql /docker-entrypoint-initdb.d/
