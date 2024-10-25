@@ -45,15 +45,17 @@ services:
     #   - .env.production
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://api:3000/health || exit 1"]
-      interval: 10s
-      timeout: 30s
-      retries: 10
+      interval: 5s
+      timeout: 5s
+      retries: 12
     restart: unless-stopped
 
   crawlers:
     build:
       context: ./crawlers
       dockerfile: Dockerfile
+    environment:
+      WORKER_COUNT: 4
     depends_on:
       api:
         condition: service_healthy
@@ -62,6 +64,7 @@ services:
       - /app/crawlers/node_modules
       - /app/crawlers/.npm:/root/.npm
       - shared_data:/app/crawlers # Volume compartilhado entre crawlers e json-processor
+      - ./crawlers/logs:/app/crawlers/logs
     # env_file:
     #   - .env.production
 
@@ -69,6 +72,8 @@ services:
     build:
       context: ./json-processor
       dockerfile: Dockerfile
+    environment:
+      WORKER_COUNT: 4
     depends_on:
       api:
         condition: service_healthy
@@ -77,6 +82,7 @@ services:
     volumes:
       - ./json-processor:/app/json-processor
       - shared_data:/app/crawlers
+      - ./json-processor/logs:/app/json-processor/logs
     # env_file:
     #   - .env.production
 

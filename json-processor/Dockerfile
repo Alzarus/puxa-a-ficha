@@ -20,9 +20,9 @@ RUN apt-get update && \
 # Copiando o build e as dependências da etapa de build
 COPY --from=build /app/json-processor /app/json-processor
 
-# Configurar o cron job para rodar via anacron
+# Configurando o cron job para rodar via anacron com caminho absoluto
 RUN echo "1 0 * * * root /usr/sbin/anacron -s" >> /etc/crontab && \
-    echo "1 30 daily root npm run process-json -- --workers=\$WORKER_COUNT >> /var/log/json-processor.log 2>&1" >> /etc/cron.d/anacron && \
+    echo "1 30 daily root cd /app/json-processor && /usr/local/bin/npm run process-json -- --workers=\$WORKER_COUNT >> /app/json-processor/logs/json-processor.log 2>&1" >> /etc/cron.d/anacron && \
     chmod +x /etc/cron.d/anacron
 
 # Executando o cron/anacron em primeiro plano
