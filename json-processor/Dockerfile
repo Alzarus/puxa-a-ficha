@@ -9,24 +9,21 @@ RUN npm ci && npm cache clean --force
 # Copiando o código
 COPY . .
 
-# Etapa de produção
 FROM node:18-slim AS production
 WORKDIR /app/json-processor
 
-# Instalação do curl e cron
+# Instalação do curl, cron e anacron
 RUN apt-get update && \
-    apt-get install -y curl cron && \
+    apt-get install -y curl cron anacron && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copiando o build e as dependências da etapa de build
 COPY --from=build /app/json-processor /app/json-processor
 
-# Configurando múltiplos workers usando o Node.js cluster
-# Configuração para permitir mais de um worker
-ENV WORKER_COUNT=4
+# Configurar o cron job para rodar via anacron
+RUN echo "1 0 * * * root /usr/sbin/anacron -s" >> /etc/crontab && \
+    echo "1 30 daily root npm run process-json -- --workers=\$WORKER_COUNT >> /var/log/json-processor.log 2>&1" >> /etc/cron.d/anacron && \
+    chmod +x /etc/cron.d/anacron
 
-# Configurando o cron job para processar os JSONs em paralelo usando múltiplos workers
-RUN echo "30 0 * * * root npm run process-json -- --workers=\$WORKER_COUNT >> /var/log/json-processor.log 2>&1" >> /etc/crontab
-
-# Executando o cron em primeiro plano
+# Executando o cron/anacron em primeiro plano
 CMD ["cron", "-f"]

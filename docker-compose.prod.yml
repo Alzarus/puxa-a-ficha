@@ -43,13 +43,20 @@ services:
       - ./api:/app
     # env_file:
     #   - .env.production
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://api:3000/health || exit 1"]
+      interval: 10s
+      timeout: 30s
+      retries: 10
+    restart: unless-stopped
 
   crawlers:
     build:
       context: ./crawlers
       dockerfile: Dockerfile
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     volumes:
       - ./crawlers:/app/crawlers
       - /app/crawlers/node_modules
@@ -63,8 +70,10 @@ services:
       context: ./json-processor
       dockerfile: Dockerfile
     depends_on:
-      - crawlers
-      - api
+      api:
+        condition: service_healthy
+      crawlers:
+        condition: service_started
     volumes:
       - ./json-processor:/app/json-processor
       - shared_data:/app/crawlers
