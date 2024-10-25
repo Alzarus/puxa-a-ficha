@@ -59,9 +59,16 @@ export class GeneralProductivityService {
   }
 
   async findLatest(): Promise<GeneralProductivity> {
-    return this.generalProductivityRepository.findOne({
-      order: { ano: 'DESC' },
-    });
+    const generalProductivity =
+      await this.generalProductivityRepository.findOne({
+        order: { ano: 'DESC' },
+      });
+
+    if (!generalProductivity) {
+      throw new NotFoundException('No latest general productivity found');
+    }
+
+    return generalProductivity;
   }
 
   async findOne(id: number): Promise<GeneralProductivity> {

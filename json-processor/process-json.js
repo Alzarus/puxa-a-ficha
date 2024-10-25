@@ -19,7 +19,7 @@ const apiEndpoint = "http://api:3000";
 
 async function processJsonFiles() {
   for (const [key, dir] of Object.entries(directories)) {
-    console.log(`Processando arquivos no diretório: ${dir}`);
+    console.log(`Processing files in directory: ${dir}`);
     const files = fs.readdirSync(dir);
 
     for (const file of files) {
@@ -59,7 +59,7 @@ async function processJsonFiles() {
         if (processedData.length > 0) {
           await sendToApi(processedData, key);
         } else {
-          console.log(`Nenhum dado novo encontrado no arquivo ${file}.`);
+          console.log(`No new data found in file ${file}.`);
         }
       }
     }
@@ -74,7 +74,11 @@ async function checkForDuplicatesContract(data) {
       (contract) => new Date(contract.con_dt_publicacao) > lastDate
     );
   } catch (error) {
-    console.error("Erro ao verificar duplicados para contracts:", error);
+    if (error.response && error.response.status === 404) {
+      console.log("No previous contracts found, proceeding with all data.");
+      return data;
+    }
+    console.error("Error checking duplicates for contracts:", error);
     return data;
   }
 }
@@ -92,7 +96,11 @@ async function checkForDuplicatesCouncilor(data) {
     }
     return newCouncilors;
   } catch (error) {
-    console.error("Erro ao verificar duplicados para councilors:", error);
+    if (error.response && error.response.status === 404) {
+      console.log("No previous councilors found, proceeding with all data.");
+      return data;
+    }
+    console.error("Error checking duplicates for councilors:", error);
     return data;
   }
 }
@@ -109,7 +117,11 @@ async function checkForDuplicatesFrequency(data) {
           frequency.pre_ses_numero > lastSessionNumber)
     );
   } catch (error) {
-    console.error("Erro ao verificar duplicados para frequencies:", error);
+    if (error.response && error.response.status === 404) {
+      console.log("No previous frequencies found, proceeding with all data.");
+      return data;
+    }
+    console.error("Error checking duplicates for frequencies:", error);
     return data;
   }
 }
@@ -139,10 +151,13 @@ async function checkForDuplicatesGeneralProductivity(data) {
       });
     });
   } catch (error) {
-    console.error(
-      "Erro ao verificar duplicados para general productivity:",
-      error
-    );
+    if (error.response && error.response.status === 404) {
+      console.log(
+        "No previous general productivity data found, proceeding with all data."
+      );
+      return data;
+    }
+    console.error("Error checking duplicates for general productivity:", error);
     return data;
   }
 }
@@ -156,7 +171,11 @@ async function checkForDuplicatesProposition(data) {
         new Date(proposition.tra_dt_movimentacao) > lastMovementDate
     );
   } catch (error) {
-    console.error("Erro ao verificar duplicados para propositions:", error);
+    if (error.response && error.response.status === 404) {
+      console.log("No previous propositions found, proceeding with all data.");
+      return data;
+    }
+    console.error("Error checking duplicates for propositions:", error);
     return data;
   }
 }
@@ -186,8 +205,14 @@ async function checkForDuplicatesPropositionProductivity(data) {
       });
     });
   } catch (error) {
+    if (error.response && error.response.status === 404) {
+      console.log(
+        "No previous proposition productivity data found, proceeding with all data."
+      );
+      return data;
+    }
     console.error(
-      "Erro ao verificar duplicados para proposition productivity:",
+      "Error checking duplicates for proposition productivity:",
       error
     );
     return data;
@@ -200,7 +225,13 @@ async function checkForDuplicatesTravelExpenses(data) {
     const lastDate = new Date(response.data.data);
     return data.filter((expense) => new Date(expense.data) > lastDate);
   } catch (error) {
-    console.error("Erro ao verificar duplicados para travel expenses:", error);
+    if (error.response && error.response.status === 404) {
+      console.log(
+        "No previous travel expenses found, proceeding with all data."
+      );
+      return data;
+    }
+    console.error("Error checking duplicates for travel expenses:", error);
     return data;
   }
 }
@@ -231,13 +262,13 @@ async function sendToApi(data, dataType) {
         endpoint = `${apiEndpoint}/travel-expenses`;
         break;
       default:
-        throw new Error("Tipo de dado desconhecido");
+        throw new Error("Unknown data type");
     }
 
     await axios.post(endpoint, data);
-    console.log(`Dados enviados para ${endpoint} com sucesso.`);
+    console.log(`Data sent to ${endpoint} successfully.`);
   } catch (error) {
-    console.error(`Erro ao enviar dados para ${dataType}:`, error);
+    console.error(`Error sending data to ${dataType}:`, error);
   }
 }
 
