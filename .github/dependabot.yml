@@ -1,0 +1,28 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/api"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore"
+    reviewers:
+      - "alzarus"
+  
+  - package-ecosystem: "npm"
+    directory: "/crawlers"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore"
+    reviewers:
+      - "alzarus"
+
+  - package-ecosystem: "npm"
+    directory: "/json-processor"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore"
+    reviewers:
+      - "alzarus"
