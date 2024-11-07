@@ -10,6 +10,7 @@
     "process-json": "node process-json.js"
   },
   "dependencies": {
+    "amqplib": "^0.10.4",
     "axios": "^1.7.4"
   }
 }

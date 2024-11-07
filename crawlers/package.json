@@ -18,6 +18,7 @@
     "start-travel-expenses": "lerna run start --scope travel-expenses-data-job"
   },
   "dependencies": {
+    "amqplib": "^0.10.4",
     "fs": "0.0.1-security",
     "path": "^0.12.7",
     "playwright": "^1.35.0",

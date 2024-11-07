@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
+const amqp = require("amqplib");
 
 const directories = {
   contract: "/app/crawlers/packages/contractDataJob/contractFiles",
@@ -16,6 +17,7 @@ const directories = {
 };
 
 const apiEndpoint = "http://api:3000";
+const brokerURL = process.env.BROKER_URL;
 
 async function processJsonFiles() {
   for (const [key, dir] of Object.entries(directories)) {
@@ -63,6 +65,28 @@ async function processJsonFiles() {
         }
       }
     }
+  }
+}
+
+// Adicionando a função para ouvir as mensagens do broker
+async function listenForMessages() {
+  try {
+    const connection = await amqp.connect(brokerURL);
+    const channel = await connection.createChannel();
+    const queue = "json-processor-queue";
+
+    await channel.assertQueue(queue, { durable: true });
+    console.log("Aguardando mensagens para iniciar o processamento...");
+
+    channel.consume(queue, async (message) => {
+      if (message !== null) {
+        console.log("Mensagem recebida:", message.content.toString());
+        await processJsonFiles();
+        channel.ack(message); // Confirma que a mensagem foi processada
+      }
+    });
+  } catch (error) {
+    console.error("Erro no listener do RabbitMQ:", error);
   }
 }
 
@@ -272,4 +296,5 @@ async function sendToApi(data, dataType) {
   }
 }
 
-processJsonFiles();
+// Inicia a escuta do broker ao carregar o módulo
+listenForMessages();

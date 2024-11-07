@@ -11,4 +11,4 @@ ENV POSTGRES_PASSWORD=$POSTGRES_PASSWORD
 ENV POSTGRES_DB=$POSTGRES_DB
 
 # Copiar scripts de inicialização para dentro do container
-COPY ./create-database.sql /docker-entrypoint-initdb.d/
+COPY ./postgresql/create-database.sql /docker-entrypoint-initdb.d/

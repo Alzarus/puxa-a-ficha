@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# Diretório de logs
+mkdir -p /app/crawlers/logs
+
 # Captura o horário de início
 start_time=$(date +%s)
 
@@ -14,20 +18,20 @@ npm run start-travel-expenses >> /app/crawlers/logs/travel-expenses.log 2>&1 &
 # Aguarda todos os processos terminarem antes de continuar
 wait
 
-# Captura o horário de término
-end_time=$(date +%s)
-
 # Calcula o tempo total de execução
+end_time=$(date +%s)
 execution_time=$((end_time - start_time))
-
-# Converte o tempo para o formato horas:minutos:segundos
 hours=$((execution_time / 3600))
 minutes=$(( (execution_time % 3600) / 60))
 seconds=$((execution_time % 60))
 
-# Exibe uma mensagem de conclusão com o tempo total de execução
 echo "Todos os crawlers foram executados com sucesso!"
 echo "Tempo total de execução: ${hours}h ${minutes}m ${seconds}s"
 
-# Cria um arquivo de flag para sinalizar que os crawlers terminaram
-touch /app/crawlers/crawlers-done.flag
+# Envia mensagem ao broker indicando conclusão
+node -e "
+  const { sendMessage } = require('./broker');
+  (async () => {
+    await sendMessage('json-processor-queue', 'Crawlers completed');
+  })();
+"
