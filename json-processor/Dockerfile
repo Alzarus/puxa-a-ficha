@@ -2,28 +2,24 @@
 FROM node:18-slim AS build
 WORKDIR /app/json-processor
 
-# Copiando e instalando as dependências
-COPY package.json package-lock.json ./
+# Copiando os arquivos de dependência para a instalação
+COPY ./json-processor/package.json ./json-processor/package-lock.json ./
 RUN npm ci && npm cache clean --force
 
-# Copiando o código
-COPY . .
+# Copiando o código-fonte necessário do json-processor
+COPY ./json-processor /app/json-processor
 
+# Etapa de produção
 FROM node:18-slim AS production
 WORKDIR /app/json-processor
 
-# Instalação do curl, cron e anacron
+# Instalação de curl e cron para o ambiente de produção
 RUN apt-get update && \
-    apt-get install -y curl cron anacron && \
+    apt-get install -y curl cron && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Copiando o build e as dependências da etapa de build
+# Copiando o código e dependências do estágio de build
 COPY --from=build /app/json-processor /app/json-processor
 
-# Configurando o cron job para rodar via anacron com caminho absoluto
-RUN echo "1 0 * * * root /usr/sbin/anacron -s" >> /etc/crontab && \
-    echo "1 30 daily root cd /app/json-processor && /usr/local/bin/npm run process-json -- --workers=\$WORKER_COUNT >> /app/json-processor/logs/json-processor.log 2>&1" >> /etc/cron.d/anacron && \
-    chmod +x /etc/cron.d/anacron
-
-# Executando o cron/anacron em primeiro plano
-CMD ["cron", "-f"]
+# CMD para iniciar o json-processor, aguardando o sinal do broker
+CMD ["npm", "run", "process-json"]

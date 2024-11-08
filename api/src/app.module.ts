@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { DataModule } from './data/data.module';
 import { HealthModule } from './data/health/health.module';
+import { ExecutionStatusModule } from './data/execution-status/execution-status.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { HealthModule } from './data/health/health.module';
       },
       inject: [ConfigService],
     }),
+    ExecutionStatusModule,
     HealthModule,
     DataModule,
   ],

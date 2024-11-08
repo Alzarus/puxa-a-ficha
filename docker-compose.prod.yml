@@ -1,8 +1,8 @@
 services:
   db:
     build:
-      context: ./postgresql
-      dockerfile: Dockerfile.db
+      context: .
+      dockerfile: ./postgresql/Dockerfile.db
       args:
         POSTGRES_USER: "prod_username"
         POSTGRES_PASSWORD: "prod_password"
@@ -17,13 +17,11 @@ services:
       - db_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    # env_file:
-    #   - .env.production
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -d puxa_a_ficha_prod -U prod_username"]
-      interval: 10s
+      interval: 15s
       timeout: 5s
-      retries: 5
+      retries: 6
     restart: unless-stopped
 
   api:
@@ -41,23 +39,24 @@ services:
       - "3000:3000"
     volumes:
       - ./api:/app
-    # env_file:
-    #   - .env.production
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://api:3000/health || exit 1"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
-      retries: 12
+      retries: 20
     restart: unless-stopped
 
   crawlers:
     build:
-      context: ./crawlers
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./crawlers/Dockerfile
     environment:
       WORKER_COUNT: 4
+      BROKER_URL: "amqp://puxa-a-ficha:ficha-a-puxa@broker"
     depends_on:
       api:
+        condition: service_healthy
+      broker:
         condition: service_healthy
     volumes:
       - ./crawlers:/app/crawlers
@@ -65,26 +64,43 @@ services:
       - /app/crawlers/.npm:/root/.npm
       - shared_data:/app/crawlers # Volume compartilhado entre crawlers e json-processor
       - ./crawlers/logs:/app/crawlers/logs
-    # env_file:
-    #   - .env.production
+    restart: unless-stopped
+    command: ["/bin/bash", "/app/crawlers/run-crawlers.sh"]
 
   json-processor:
     build:
-      context: ./json-processor
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./json-processor/Dockerfile
     environment:
       WORKER_COUNT: 4
+      BROKER_URL: "amqp://puxa-a-ficha:ficha-a-puxa@broker"
     depends_on:
       api:
         condition: service_healthy
-      crawlers:
-        condition: service_started
+      broker:
+        condition: service_healthy
     volumes:
       - ./json-processor:/app/json-processor
       - shared_data:/app/crawlers
+      - /app/json-processor/node_modules
       - ./json-processor/logs:/app/json-processor/logs
-    # env_file:
-    #   - .env.production
+    restart: unless-stopped
+    command: ["node", "/app/json-processor/process-json.js"]
+
+  broker:
+    image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: puxa-a-ficha
+      RABBITMQ_DEFAULT_PASS: ficha-a-puxa
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
 volumes:
   db_data:
