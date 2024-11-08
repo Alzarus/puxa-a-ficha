@@ -15,6 +15,7 @@ import { PropositionModule } from './proposition/proposition.module';
 import { ContractModule } from './contract/contract.module';
 import { TravelExpensesModule } from './travel-expenses/travel-expenses.module';
 import { HealthModule } from './health/health.module';
+import { ExecutionStatusModule } from './execution-status/execution-status.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { HealthModule } from './health/health.module';
     ContractModule,
     TravelExpensesModule,
     HealthModule,
+    ExecutionStatusModule,
   ],
   exports: [TypeOrmModule],
   providers: [],

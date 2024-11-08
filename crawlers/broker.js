@@ -7,6 +7,7 @@ async function sendMessage(queue, message) {
     await channel.assertQueue(queue, { durable: true });
     channel.sendToQueue(queue, Buffer.from(message));
     console.log(`Mensagem enviada para ${queue}: ${message}`);
+
     setTimeout(() => {
       channel.close();
       connection.close();

@@ -41,9 +41,9 @@ services:
       - ./api:/app
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://api:3000/health || exit 1"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
-      retries: 12
+      retries: 20
     restart: unless-stopped
 
   crawlers:

@@ -76,17 +76,29 @@ async function listenForMessages() {
     const queue = "json-processor-queue";
 
     await channel.assertQueue(queue, { durable: true });
-    console.log("Aguardando mensagens para iniciar o processamento...");
+    console.log("Waiting for messages in queue:", queue);
 
     channel.consume(queue, async (message) => {
       if (message !== null) {
-        console.log("Mensagem recebida:", message.content.toString());
+        console.log("Message received:", message.content.toString());
         await processJsonFiles();
-        channel.ack(message); // Confirma que a mensagem foi processada
+        channel.ack(message);
       }
     });
+
+    // Handle connection close
+    connection.on("close", () => {
+      console.error("Connection to broker closed. Reconnecting...");
+      setTimeout(listenForMessages, 1000); // Attempt reconnection after 1 second
+    });
+
+    // Handle connection errors
+    connection.on("error", (error) => {
+      console.error("Broker connection error:", error);
+    });
   } catch (error) {
-    console.error("Erro no listener do RabbitMQ:", error);
+    console.error("Failed to connect to the broker. Retrying...", error);
+    setTimeout(listenForMessages, 5000); // Retry connection after 5 seconds
   }
 }
 
@@ -262,31 +274,19 @@ async function checkForDuplicatesTravelExpenses(data) {
 
 async function sendToApi(data, dataType) {
   try {
-    let endpoint;
-    switch (dataType) {
-      case "contract":
-        endpoint = `${apiEndpoint}/contracts`;
-        break;
-      case "councilor":
-        endpoint = `${apiEndpoint}/councilors`;
-        break;
-      case "frequency":
-        endpoint = `${apiEndpoint}/frequencies`;
-        break;
-      case "generalProductivity":
-        endpoint = `${apiEndpoint}/general-productivity`;
-        break;
-      case "proposition":
-        endpoint = `${apiEndpoint}/propositions`;
-        break;
-      case "propositionProductivity":
-        endpoint = `${apiEndpoint}/proposition-productivity`;
-        break;
-      case "travelExpenses":
-        endpoint = `${apiEndpoint}/travel-expenses`;
-        break;
-      default:
-        throw new Error("Unknown data type");
+    const endpointMap = {
+      contract: `${apiEndpoint}/contracts`,
+      councilor: `${apiEndpoint}/councilors`,
+      frequency: `${apiEndpoint}/frequencies`,
+      generalProductivity: `${apiEndpoint}/general-productivity`,
+      proposition: `${apiEndpoint}/propositions`,
+      propositionProductivity: `${apiEndpoint}/proposition-productivity`,
+      travelExpenses: `${apiEndpoint}/travel-expenses`,
+    };
+
+    const endpoint = endpointMap[dataType];
+    if (!endpoint) {
+      throw new Error(`Unknown data type: ${dataType}`);
     }
 
     await axios.post(endpoint, data);
