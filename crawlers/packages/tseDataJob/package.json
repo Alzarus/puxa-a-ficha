@@ -1,0 +1,11 @@
+{
+  "name": "tse-data-job",
+  "version": "1.0.0",
+  "description": "Crawler para coletar dados de eleitores no tse.",
+  "main": "src/tseDataJob.js",
+  "scripts": {
+    "start": "node src/tseDataJob.js"
+  },
+  "author": "",
+  "license": "ISC"
+}

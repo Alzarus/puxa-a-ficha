@@ -25,7 +25,9 @@ services:
     restart: unless-stopped
 
   api:
-    build: ./api
+    build:
+      context: ./api-go
+      dockerfile: Dockerfile
     environment:
       DB_HOST: db
       DB_PORT: 5432
@@ -38,12 +40,12 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./api:/app
+      - ./api-go:/app
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://api:3000/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://api:3000/api/v1/health || exit 1"]
       interval: 10s
       timeout: 5s
-      retries: 20
+      retries: 5
     restart: unless-stopped
 
   crawlers:
@@ -69,10 +71,9 @@ services:
 
   json-processor:
     build:
-      context: .
-      dockerfile: ./json-processor/Dockerfile
+      context: ./json-processor-go
+      dockerfile: Dockerfile
     environment:
-      WORKER_COUNT: 4
       BROKER_URL: "amqp://puxa-a-ficha:ficha-a-puxa@broker"
     depends_on:
       api:
@@ -80,12 +81,11 @@ services:
       broker:
         condition: service_healthy
     volumes:
-      - ./json-processor:/app/json-processor
-      - shared_data:/app/crawlers
-      - /app/json-processor/node_modules
-      - ./json-processor/logs:/app/json-processor/logs
+      - ./crawlers:/app/crawlers # Compartilhar diretórios de entrada dos arquivos JSON
+      - ./json-processor:/app/json-processor # Montar o código do json-processor
+      - ./json-processor/logs:/app/json-processor/logs # Diretório de logs
     restart: unless-stopped
-    command: ["node", "/app/json-processor/process-json.js"]
+    command: ["./main"]
 
   broker:
     image: rabbitmq:3-management
