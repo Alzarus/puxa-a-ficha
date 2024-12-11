@@ -2,12 +2,14 @@ package processing
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"fmt"
 	"json-processor-go/api"
 	"json-processor-go/utils"
+	"os"
 	"path/filepath"
 )
 
+// Mapeamento de diretórios
 var directories = map[string]string{
 	"contract":                "/app/crawlers/packages/contractDataJob/contractFiles",
 	"councilor":               "/app/crawlers/packages/councilorDataJob/councilorFiles",
@@ -18,11 +20,12 @@ var directories = map[string]string{
 	"travelExpenses":          "/app/crawlers/packages/travelExpensesDataJob/travelExpensesFiles",
 }
 
+// Processa arquivos JSON
 func ProcessJsonFiles() error {
 	for key, dir := range directories {
 		utils.Log.Infof("Processing files in directory: %s", dir)
 
-		files, err := ioutil.ReadDir(dir)
+		files, err := os.ReadDir(dir)
 		if err != nil {
 			utils.Log.Warnf("Failed to read directory: %v", err)
 			continue
@@ -31,7 +34,7 @@ func ProcessJsonFiles() error {
 		for _, file := range files {
 			if filepath.Ext(file.Name()) == ".json" {
 				filePath := filepath.Join(dir, file.Name())
-				data, err := ioutil.ReadFile(filePath)
+				data, err := os.ReadFile(filePath)
 				if err != nil {
 					utils.Log.Warnf("Failed to read file %s: %v", file.Name(), err)
 					continue
@@ -44,18 +47,30 @@ func ProcessJsonFiles() error {
 					continue
 				}
 
-				// Adicione a validação aqui
-				err = validateFields(jsonData, []string{"requiredField"})
+				// Validação de campos obrigatórios
+				err = validateFields(jsonData, []string{"requiredField1", "requiredField2"})
 				if err != nil {
 					utils.Log.Warnf("Validation failed for file %s: %v", file.Name(), err)
 					continue
 				}
 
-				// Envie para a API
+				// Envie os dados para a API
 				err = api.SendToApi(jsonData, key)
 				if err != nil {
 					utils.Log.Errorf("Failed to send data for %s: %v", key, err)
 				}
+			}
+		}
+	}
+	return nil
+}
+
+// Valida campos obrigatórios em cada objeto do JSON
+func validateFields(data []map[string]interface{}, requiredFields []string) error {
+	for _, item := range data {
+		for _, field := range requiredFields {
+			if value, exists := item[field]; !exists || value == nil || value == "" {
+				return fmt.Errorf("missing or invalid field: %s", field)
 			}
 		}
 	}

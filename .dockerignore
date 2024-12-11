@@ -1,0 +1,13 @@
+# Ignorar diretórios desnecessários
+node_modules
+*.log
+*.tmp
+.git
+*.cache
+
+# Ignorar arquivos grandes
+*.zip
+*.tar.gz
+*.mp4
+*.png
+*.jpg

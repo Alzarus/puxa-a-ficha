@@ -34,6 +34,7 @@ services:
       DB_USERNAME: "prod_username"
       DB_PASSWORD: "prod_password"
       DB_DATABASE: "puxa_a_ficha_prod"
+      BROKER_URL: "amqp://puxa-a-ficha:ficha-a-puxa@broker"
     depends_on:
       db:
         condition: service_healthy
@@ -47,6 +48,25 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+
+  validate-user-worker:
+    build:
+      context: ./validate-user-worker
+      dockerfile: Dockerfile
+    environment:
+      BROKER_URL: "amqp://puxa-a-ficha:ficha-a-puxa@broker"
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USERNAME: "prod_username"
+      DB_PASSWORD: "prod_password"
+      DB_DATABASE: "puxa_a_ficha_prod"
+    depends_on:
+      broker:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    command: ["./validate-user-worker"]
 
   crawlers:
     build:
@@ -81,11 +101,9 @@ services:
       broker:
         condition: service_healthy
     volumes:
-      - ./crawlers:/app/crawlers # Compartilhar diretórios de entrada dos arquivos JSON
-      - ./json-processor:/app/json-processor # Montar o código do json-processor
-      - ./json-processor/logs:/app/json-processor/logs # Diretório de logs
+      - ./crawlers:/app/crawlers # Diretório de entrada para JSON
+      - ./json-processor-go/logs:/app/logs # Diretório de logs
     restart: unless-stopped
-    command: ["./main"]
 
   broker:
     image: rabbitmq:3-management

@@ -1,5 +1,6 @@
 const { chromium } = require("playwright-extra");
 const stealth = require("puppeteer-extra-plugin-stealth")();
+const yargs = require("yargs");
 
 chromium.use(stealth);
 
@@ -101,35 +102,23 @@ async function writeLog(message) {
 }
 
 function processArgs() {
-  const args = require("yargs")
-    .usage(
-      "Uso: node $0 --tituloCpf <titulo ou CPF> --dataNascimento <data> [--nomeMae <nome>]"
-    )
-    .option("tituloCpf", {
-      alias: "t",
-      describe: "Título ou CPF do eleitor",
-      type: "string",
-      demandOption: true,
-    })
-    .option("dataNascimento", {
-      alias: "d",
-      describe: "Data de nascimento no formato DD/MM/AAAA",
-      type: "string",
-      demandOption: true,
-    })
-    .option("nomeMae", {
-      alias: "n",
-      describe: "Nome da mãe (opcional, se não constar no documento)",
-      type: "string",
-      default: null,
-    })
-    .help("h")
-    .alias("h", "help").argv;
+  const args = {
+    tituloCpf: process.env.npm_config_tituloCpf,
+    dataNascimento: process.env.npm_config_dataNascimento,
+    nomeMae: process.env.npm_config_nomeMae || null,
+  };
+
+  if (!args.tituloCpf || !args.dataNascimento) {
+    console.error("Erro: 'tituloCpf' e 'dataNascimento' são obrigatórios.");
+    process.exit(1);
+  }
 
   return args;
 }
 
 (async () => {
   const args = processArgs();
+  console.log("Argumentos recebidos:", args);
+
   await tseDataJob(args);
 })();

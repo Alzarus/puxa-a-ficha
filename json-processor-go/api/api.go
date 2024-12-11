@@ -1,10 +1,10 @@
 package api
 
 import (
-	tes"
-	coding/json"
-	t"
-	t/http"
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"net/http"
 )
 
 const apiEndpoint = "http://api:3000/api/v1"
