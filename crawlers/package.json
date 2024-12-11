@@ -15,15 +15,19 @@
     "start-general-productivity": "lerna run start --scope general-productivity-data-job",
     "start-proposition": "lerna run start --scope proposition-data-job",
     "start-proposition-productivity": "lerna run start --scope proposition-productivity-data-job",
-    "start-travel-expenses": "lerna run start --scope travel-expenses-data-job"
+    "start-travel-expenses": "lerna run start --scope travel-expenses-data-job",
+    "start-tse": "lerna run start --scope tse-data-job"
   },
   "dependencies": {
     "amqplib": "^0.10.4",
     "fs": "0.0.1-security",
     "path": "^0.12.7",
     "playwright": "^1.35.0",
+    "playwright-extra": "^4.3.6",
     "puppeteer": "^21.0.3",
-    "xml2js": "^0.4.23"
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "xml2js": "^0.4.23",
+    "yargs": "^17.7.2"
   },
   "devDependencies": {
     "lerna": "^8.1.7"

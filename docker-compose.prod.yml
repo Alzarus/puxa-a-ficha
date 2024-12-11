@@ -25,26 +25,48 @@ services:
     restart: unless-stopped
 
   api:
-    build: ./api
+    build:
+      context: ./api-go
+      dockerfile: Dockerfile
     environment:
       DB_HOST: db
       DB_PORT: 5432
       DB_USERNAME: "prod_username"
       DB_PASSWORD: "prod_password"
       DB_DATABASE: "puxa_a_ficha_prod"
+      BROKER_URL: "amqp://puxa-a-ficha:ficha-a-puxa@broker"
     depends_on:
       db:
         condition: service_healthy
     ports:
       - "3000:3000"
     volumes:
-      - ./api:/app
+      - ./api-go:/app
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://api:3000/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://api:3000/api/v1/health || exit 1"]
       interval: 10s
       timeout: 5s
-      retries: 20
+      retries: 5
     restart: unless-stopped
+
+  validate-user-worker:
+    build:
+      context: ./validate-user-worker
+      dockerfile: Dockerfile
+    environment:
+      BROKER_URL: "amqp://puxa-a-ficha:ficha-a-puxa@broker"
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USERNAME: "prod_username"
+      DB_PASSWORD: "prod_password"
+      DB_DATABASE: "puxa_a_ficha_prod"
+    depends_on:
+      broker:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    command: ["./validate-user-worker"]
 
   crawlers:
     build:
@@ -69,10 +91,9 @@ services:
 
   json-processor:
     build:
-      context: .
-      dockerfile: ./json-processor/Dockerfile
+      context: ./json-processor-go
+      dockerfile: Dockerfile
     environment:
-      WORKER_COUNT: 4
       BROKER_URL: "amqp://puxa-a-ficha:ficha-a-puxa@broker"
     depends_on:
       api:
@@ -80,12 +101,9 @@ services:
       broker:
         condition: service_healthy
     volumes:
-      - ./json-processor:/app/json-processor
-      - shared_data:/app/crawlers
-      - /app/json-processor/node_modules
-      - ./json-processor/logs:/app/json-processor/logs
+      - ./crawlers:/app/crawlers # Diretório de entrada para JSON
+      - ./json-processor-go/logs:/app/logs # Diretório de logs
     restart: unless-stopped
-    command: ["node", "/app/json-processor/process-json.js"]
 
   broker:
     image: rabbitmq:3-management
