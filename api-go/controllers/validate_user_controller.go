@@ -49,7 +49,7 @@ func ValidateUser(c *gin.Context) {
 // publishToQueue publica uma mensagem em uma fila RabbitMQ
 func publishToQueue(c *gin.Context, queueName string, message []byte) error {
 	// Conecta ao RabbitMQ
-	conn, err := amqp091.Dial("amqp://puxa-a:ficha@localhost:5672/")
+	conn, err := amqp091.Dial("amqp://to-de-olho:olho-de-to@broker:5672/")
 	if err != nil {
 		log.Printf("Erro ao conectar ao RabbitMQ: %v", err)
 		return err

@@ -2,8 +2,8 @@ package main
 
 import (
 	"log"
-	"puxa-a-ficha-api/configs"
-	"puxa-a-ficha-api/routes"
+	"to-de-olho-api/configs"
+	"to-de-olho-api/routes"
 
 	"github.com/gin-gonic/gin"
 )

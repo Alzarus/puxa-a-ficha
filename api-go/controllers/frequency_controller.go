@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"net/http"
-	"puxa-a-ficha-api/models"
-	"puxa-a-ficha-api/repositories"
+	"to-de-olho-api/models"
+	"to-de-olho-api/repositories"
 
 	"github.com/gin-gonic/gin"
 )

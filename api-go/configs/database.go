@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"puxa-a-ficha-api/models"
+	"to-de-olho-api/models"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

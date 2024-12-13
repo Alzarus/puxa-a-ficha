@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"puxa-a-ficha-api/controllers"
+	"to-de-olho-api/controllers"
 
 	"github.com/gin-gonic/gin"
 )

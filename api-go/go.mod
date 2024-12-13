@@ -1,4 +1,4 @@
-module puxa-a-ficha-api
+module to-de-olho-api
 
 go 1.23
 
