@@ -1,8 +1,8 @@
 package repositories
 
 import (
-	"puxa-a-ficha-api/configs"
-	"puxa-a-ficha-api/models"
+	"to-de-olho-api/configs"
+	"to-de-olho-api/models"
 )
 
 func GetAllFrequencies() ([]models.Frequency, error) {

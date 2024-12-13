@@ -6,19 +6,19 @@ services:
       args:
         POSTGRES_USER: "prod_username"
         POSTGRES_PASSWORD: "prod_password"
-        POSTGRES_DB: "puxa_a_ficha_prod"
+        POSTGRES_DB: "to_de_olho_prod"
     environment:
       DB_HOST: db
       DB_PORT: 5432
       DB_USERNAME: prod_username
       DB_PASSWORD: prod_password
-      DB_DATABASE: puxa_a_ficha_prod
+      DB_DATABASE: to_de_olho_prod
     volumes:
       - db_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d puxa_a_ficha_prod -U prod_username"]
+      test: ["CMD-SHELL", "pg_isready -d to_de_olho_prod -U prod_username"]
       interval: 15s
       timeout: 5s
       retries: 6
@@ -33,8 +33,8 @@ services:
       DB_PORT: 5432
       DB_USERNAME: "prod_username"
       DB_PASSWORD: "prod_password"
-      DB_DATABASE: "puxa_a_ficha_prod"
-      BROKER_URL: "amqp://puxa-a-ficha:ficha-a-puxa@broker"
+      DB_DATABASE: "to_de_olho_prod"
+      BROKER_URL: "amqp://to-de-olho:olho-de-to@broker"
     depends_on:
       db:
         condition: service_healthy
@@ -54,12 +54,12 @@ services:
       context: ./validate-user-worker
       dockerfile: Dockerfile
     environment:
-      BROKER_URL: "amqp://puxa-a-ficha:ficha-a-puxa@broker"
+      BROKER_URL: "amqp://to-de-olho:olho-de-to@broker"
       DB_HOST: db
       DB_PORT: 5432
       DB_USERNAME: "prod_username"
       DB_PASSWORD: "prod_password"
-      DB_DATABASE: "puxa_a_ficha_prod"
+      DB_DATABASE: "to_de_olho_prod"
     depends_on:
       broker:
         condition: service_healthy
@@ -74,7 +74,7 @@ services:
       dockerfile: ./crawlers/Dockerfile
     environment:
       WORKER_COUNT: 4
-      BROKER_URL: "amqp://puxa-a-ficha:ficha-a-puxa@broker"
+      BROKER_URL: "amqp://to-de-olho:olho-de-to@broker"
     depends_on:
       api:
         condition: service_healthy
@@ -94,7 +94,7 @@ services:
       context: ./json-processor-go
       dockerfile: Dockerfile
     environment:
-      BROKER_URL: "amqp://puxa-a-ficha:ficha-a-puxa@broker"
+      BROKER_URL: "amqp://to-de-olho:olho-de-to@broker"
     depends_on:
       api:
         condition: service_healthy
@@ -108,8 +108,8 @@ services:
   broker:
     image: rabbitmq:3-management
     environment:
-      RABBITMQ_DEFAULT_USER: puxa-a-ficha
-      RABBITMQ_DEFAULT_PASS: ficha-a-puxa
+      RABBITMQ_DEFAULT_USER: to-de-olho
+      RABBITMQ_DEFAULT_PASS: olho-de-to
     ports:
       - "5672:5672"
       - "15672:15672"

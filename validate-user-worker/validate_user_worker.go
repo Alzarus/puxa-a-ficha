@@ -17,7 +17,7 @@ type RequestBody struct {
 
 func main() {
 	// Conecta ao RabbitMQ
-	conn, err := amqp091.Dial("amqp://puxa-a-ficha:ficha-a-puxa@broker:5672/")
+	conn, err := amqp091.Dial("amqp://to-de-olho:olho-de-to@broker:5672/")
 	if err != nil {
 		log.Fatalf("Erro ao conectar ao RabbitMQ: %v", err)
 	}
